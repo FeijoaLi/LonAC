@@ -1,0 +1,10 @@
+# .gitignore 内容
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+# 如果你不想上传生成的 PDF，把下面这行也加上
+# *.pdf
