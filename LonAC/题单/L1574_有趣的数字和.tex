@@ -1,0 +1,305 @@
+\documentclass{ctexart}
+\ctexset{
+    section = {
+        titleformat = \raggedright,
+        name = {,、},
+        number = \chinese{section}
+    }
+}
+\usepackage[a4paper,top=2.54cm,bottom=2.54cm,left=3.18cm,right=3.18cm]{geometry}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{pifont}  
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+
+\definecolor{lightpink}{RGB}{184,83,182}
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{emphcolor}{RGB}{199,21,133}
+\definecolor{important}{RGB}{220,20,60}
+\definecolor{highlight}{RGB}{0,100,0}
+\definecolor{sumregion}{RGB}{255,200,200}
+\definecolor{currentcell}{RGB}{255,0,0}
+\definecolor{formula}{RGB}{0,0,139}
+\definecolor{keycode}{RGB}{178,34,34}
+
+\lstset{
+basicstyle=\ttfamily\small,
+language=C++,
+frame=single,
+breaklines=true,
+backgroundcolor=\color{codebg},
+escapeinside=``,
+commentstyle=\color{green!60!black},
+keywordstyle=\color{blue},
+stringstyle=\color{red},
+rulecolor=\color{black},
+framesep=5pt,
+xleftmargin=10pt,
+xrightmargin=10pt
+}
+
+\setlist[enumerate,1]{label=\arabic*., leftmargin=2em}
+\setlist[enumerate,2]{label=（\arabic*）, leftmargin=3em}
+\setlist[enumerate,3]{label=\roman*, leftmargin=4em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{解码未来AI教育 \quad 编程题解}
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+\section*{有趣的数字和 \ding{78}\ding{78}} 
+
+\subsection*{题目描述}
+如果一个正整数的二进制表示包含奇数个 1，那么小A就会认为这个正整数是有趣的。
+
+例如，7 的二进制表示为 (111)$_2$，包含 1 的个数为 3 个，所以 7 是有趣的。但是 9=(1001)$_2$ 包含 2 个 1，所以 9 不是有趣的。
+
+给定正整数 $l,r$，请你统计满足 $l \leq n \leq r$ 的有趣的整数 $n$ 之和。
+
+\subsection*{输入输出格式}
+\textbf{输入：}一行，两个正整数 $l,r$，表示给定的正整数。\par
+\textbf{输出：}一行，一个正整数，表示 $l,r$ 之间有趣的整数之和。\par
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|X|X|}
+\hline
+\textbf{输入示例} & \textbf{输出示例}     \\    
+\hline
+3 8 & 19 \\ 
+\hline
+5 15 & 70 \\
+\hline
+1 10 & 25 \\
+\hline
+\end{tabularx}  
+\end{table}
+
+\subsection*{样例解释}
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{十进制} & \textbf{二进制} & \textbf{1的个数} & \textbf{是否有趣} \\ 
+\hline
+3 & 0011 & 2个 & 否 \\
+\hline
+4 & 0100 & 1个 & \textcolor{important}{是} \\
+\hline
+5 & 0101 & 2个 & 否 \\
+\hline
+6 & 0110 & 2个 & 否 \\
+\hline
+7 & 0111 & 3个 & \textcolor{important}{是} \\
+\hline
+8 & 1000 & 1个 & \textcolor{important}{是} \\
+\hline
+\end{tabular}
+\end{table}
+
+在区间 $[3,8]$ 中，有趣的数字有：4, 7, 8，它们的和为 $4+7+8=19$。
+
+\subsection*{算法分析}
+
+\begin{enumerate}
+\item \textcolor{highlight}{\textbf{暴力解法}}\\
+最直接的方法是遍历区间 $[l, r]$ 中的每个数，检查其二进制表示中 1 的个数是否为奇数，如果是则累加。
+
+\begin{lstlisting}[language=C++]
+long long sum = 0;
+for (int i = l; i <= r; i++) {
+    if(check(i)) {` // check函数用于判断i是否有趣`
+        sum += i;
+    }
+}
+\end{lstlisting}
+
+这种方法的时间复杂度为 $O((r-l+1) \cdot \log r)$，当 $r = 10^9 , l = 1$ 时运算量约为 $10^9$ 级别，会导致超时。
+
+\item \textcolor{highlight}{\textbf{数学规律解法}}
+\begin{enumerate}
+    \item \textcolor{red}{\textbf{问题拆解：}} 
+    将计算区间 $[l, r]$ 的问题转化为计算两个前缀和的差：$f(r) - f(l-1)$，其中 $f(x)$ 表示从 0 到 $x$ 的所有有趣数之和。
+    
+    所以 用 res(l,r)表示从l 到 r的有趣数字和 ， 则有：
+    \[
+    \textcolor{formula}{res(l,r) = f(r) - f(l-1)}
+    \]
+    
+    \item \textcolor{red}{\textbf{分组讨论：}} 
+观察二进制数的规律，可以发现每 4 个连续整数中，有趣数的分布具有周期性：
+
+\begin{center}
+\begin{tabular}{cc}
+\begin{minipage}{0.45\textwidth}
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{十进制} & \textbf{二进制} & \textbf{1的个数} & \textbf{是否有趣} \\ 
+\hline
+0 & 0000 & 0个 & 否 \\
+\hline
+1 & 0001 & 1个 & \textcolor{important}{是} \\
+\hline
+2 & 0010 & 1个 & \textcolor{important}{是} \\
+\hline
+3 & 0011 & 2个 & 否 \\
+\hline
+\end{tabular}
+
+\end{minipage}
+&
+\begin{minipage}{0.45\textwidth}
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{十进制} & \textbf{二进制} & \textbf{1的个数} & \textbf{是否有趣} \\ 
+\hline
+4 & 0100 & 1个 & \textcolor{important}{是} \\
+\hline
+5 & 0101 & 2个 & 否 \\
+\hline
+6 & 0110 & 2个 & 否 \\
+\hline
+7 & 0111 & 3个 & \textcolor{important}{是} \\
+\hline
+\end{tabular}
+
+\end{minipage}
+\\
+& \\
+\begin{minipage}{0.45\textwidth}
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{十进制} & \textbf{二进制} & \textbf{1的个数} & \textbf{是否有趣} \\ 
+\hline
+8 & 1000 & 1个 & \textcolor{important}{是} \\
+\hline
+9 & 1001 & 2个 & 否 \\
+\hline
+10 & 1010 & 2个 & 否 \\
+\hline
+11 & 1011 & 3个 & \textcolor{important}{是} \\
+\hline
+\end{tabular}
+
+\end{minipage}
+&
+\begin{minipage}{0.45\textwidth}
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{十进制} & \textbf{二进制} & \textbf{1的个数} & \textbf{是否有趣} \\ 
+\hline
+12 & 1100 & 2个 & 否 \\
+\hline
+13 & 1101 & 3个 & \textcolor{important}{是} \\
+\hline
+14 & 1110 & 3个 & \textcolor{important}{是} \\
+\hline
+15 & 1111 & 4个 & 否 \\
+\hline
+\end{tabular}
+
+\end{minipage}
+\end{tabular}
+\end{center}
+
+    观察上述四组数据，可以发现：
+    \begin{itemize}
+    \item 对于任意四位连续的数字：$...00 , ...01 , ...10 , ...11$ , 其中省略高位部分
+    \item 如果 省略的部分中 有奇数个1，那么有趣的数字是：$...01$ 和 $...10$
+    \item 如果 省略的部分中 有偶数个1，那么有趣的数字是：$...00$ 和 $...11$
+    \item 因为 $\textcolor{formula}{...00} + \textcolor{formula}{...11} = 
+    \textcolor{formula}{...01} + \textcolor{formula}{...10}$
+    \item 所以无论 省略的部分中 是奇数个1 还是偶数个1，每组四个数中有趣数字之和都等于四个数组之和的一半，也就是：$\textcolor{formula}{\frac{...00 + ...01 + ...10 + ...11}{2}}$
+    \item 所以\\ 
+$res[0,3] = \frac{0+1+2+3}{2} = 3$ \\
+$res[0,7] = \frac{0+1+2+3+4+5+6+7}{2} = 14$ \\
+$res[0,11] = \frac{0+1+2+...+11}{2} = 33$ \\
+$res[0,x] = \frac{0+1+2+...+x}{2} = 
+\frac{x*(x+1)}{4}$ \\
+$(x \mod 4 == 3 \quad\text{确保正好按照4个4个
+一组分完所有数字})$\\
+    \end{itemize}
+    
+    \item \textcolor{red}{\textbf{求和关系：}} 
+    对于可以完整分成的 4 个数一组，该组中有趣数字之和等于所有数字之和的一半。
+    \begin{lstlisting}[language=C++]
+res += (x + 1) * x / 4; `// \textcolor{keycode}{\textbf{核心公式：完整组的和}}
+    \end{lstlisting}
+\newpage
+    \item \textcolor{red}{\textbf{边界处理：}}
+    对于无法组成完整 4 个一组的剩余部分，需要单独判断每个数是否有趣并累加。
+    \begin{lstlisting}[language=C++]
+bool check(int x) {` // 判断x是否有趣`
+    int cnt = 0;
+    while (x) {
+        if (x & 1) cnt++;
+        x >>= 1;
+    }
+    return (cnt & 1);
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+while (x > 0 && x % 4 != 3) {
+    `//从大开始缩小数字，直到这个数字可以完整按照4个4个分`
+    if (check(x)) res += x--; `// \textcolor{keycode}{\textbf{处理边界数字}}`
+}
+    \end{lstlisting}
+\end{enumerate}
+\end{enumerate}
+
+\subsection*{代码运行步骤展示}
+以输入 \texttt{5 17} 为例： 
+\textcolor{red}{$res(5 ,17) = f(17) - f(4)$}\\[0.5em]
+\textcolor{highlight}{\textbf{1. 计算$f(17)$:}}
+\begin{itemize}\setlength{\itemsep}{1pt}\setlength{\parskip}{1pt}
+\item 17 mod 4 = 1 ≠ 3，需要边界处理
+\item 从17开始向前处理不完整组：
+    \begin{itemize}\setlength{\itemsep}{1pt}\setlength{\parskip}{1pt}
+    \item $\textcolor{formula}{17}$: 二进制(10001)，有$\textcolor{formula}{2}$个1，偶数个，\textcolor{important}{不是有趣的}
+    \item $\textcolor{formula}{16}$: 二进制(10000)，有$\textcolor{formula}{1}$个1，奇数个，\textcolor{important}{是有趣的}，res += 16.
+    \item $\textcolor{formula}{15}$: 15 mod 4 = 3，停止边界处理.
+    \end{itemize}
+
+\item 此时x = 15，15 mod 4 = 3，可以使用公式( 0-3, 4-7, 8-11, 12-15 都是完整组)
+\item 完整组的和 = $\frac{15 * 16}{4} = 60$
+\item 所以$f(17) = 16 + 60 = \textcolor{formula}{76}$
+\end{itemize}
+
+\textcolor{highlight}{\textbf{2. 计算$f(4)$:}}
+\begin{itemize}\setlength{\itemsep}{1pt}\setlength{\parskip}{1pt}
+\item 4 mod 4 = 0 ≠ 3，需要边界处理
+\item 从4开始向前处理不完整组：
+    \begin{itemize}\setlength{\itemsep}{1pt}\setlength{\parskip}{1pt}
+    \item $\textcolor{formula}{4}$: 二进制(100)，有$\textcolor{formula}{1}$个1，奇数个，\textcolor{important}{是有趣的}，res += 4.
+    \item $\textcolor{formula}{3}$: 3 mod 4 = 3，停止边界处理.
+    \end{itemize}
+\item 此时x = 3，3 mod 4 = 3，可以使用公式( 0-3 是完整组)
+\item 完整组的和 = $\frac{3 * 4}{4} = 3$
+\item 所以$f(4) = 4 + 3 = \textcolor{formula}{7}$
+\end{itemize}
+
+\textcolor{highlight}{\textbf{3. 最终结果:}}
+$res(5,17) = f(17) - f(4) = 76 - 7 = 69$
+
+\subsection*{拓展思考}
+\begin{itemize}
+    \item 除了寻找数学规律，这种按位的题目还可以考虑使用\textcolor{red}{数位dp}来解决。
+\end{itemize}
+
+\end{document}

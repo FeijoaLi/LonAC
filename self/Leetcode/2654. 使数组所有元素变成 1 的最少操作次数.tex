@@ -1,0 +1,163 @@
+\documentclass{ctexart}
+\ctexset{
+    section = {
+        titleformat = \raggedright,
+        name = {,、},
+        number = \chinese{section}
+    }
+}
+
+\usepackage[a4paper,top=2.54cm,bottom=2.54cm,left=3.18cm,right=3.18cm]{geometry}
+\usepackage{eso-pic,graphicx}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{pifont}  
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\definecolor{highlightpink}{RGB}{255,0,180}  % 粉红色
+\definecolor{codebg}{RGB}{245,245,245}       % 代码背景色
+\definecolor{lightgray}{gray}{0.8}           % 浅灰色（替代gray!20）
+\definecolor{commentcolor}{RGB}{0,128,0}     % 注释颜色（深绿色）
+\definecolor{highlight1}{RGB}{255,50,50}     % 红色高亮
+\definecolor{highlight2}{RGB}{0,100,200}     % 蓝色高亮
+\definecolor{highlight3}{RGB}{150,0,150}     % 紫色高亮
+
+
+\AddToShipoutPictureFG{%
+  \AtPageCenter{%
+    \begin{tikzpicture}[remember picture,overlay]
+      \node[opacity=0.1] at (0,0) {\includegraphics[width=0.8\paperwidth,height=0.6\paperheight,keepaspectratio]{sy.png}};
+    \end{tikzpicture}%
+  }%
+}
+
+
+% 设置超链接样式
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+    pdftitle={LeetCode 2654 题解},
+    pdfauthor={Feijoa_Li}
+}
+
+
+
+% 设置 listings 样式
+\lstset{
+basicstyle=\ttfamily\small,
+language=C++,
+frame=single,
+breaklines=true,
+backgroundcolor=\color{codebg},
+escapeinside=``,
+commentstyle=\color{commentcolor},
+keywordstyle=\color{blue},
+stringstyle=\color{red},
+rulecolor=\color{black},
+framesep=5pt,
+xleftmargin=10pt,
+xrightmargin=10pt
+}
+
+\title{\href{https://leetcode.cn/problems/minimum-number-of-operations-to-make-all-array-elements-equal-to-1/}{LeetCode 2654. 使数组所有元素变成 1 的最少操作次数}}
+\author{Feijoa\_Li}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{题目描述}
+给你一个下标从 0 开始的 正 整数数组 \texttt{nums} 。你可以对数组执行以下操作 任意 次：
+
+选择一个满足 $0 \leq i < n - 1$ 的下标 $i$ ，将 \texttt{nums[i]} 或者 \texttt{nums[i+1]} 两者之一替换成它们的最大公约数。
+
+请你返回使数组 \texttt{nums} 中所有元素都等于 1 的 最少 操作次数。如果无法让数组全部变成 1 ，请你返回 -1 。
+
+两个正整数的最大公约数指的是能整除这两个数的最大正整数。
+
+\section{解题思路}
+本题的关键在于\textcolor{highlight1}{如何生成第一个1}，因为一旦有了一个1，就可以通过它把相邻的元素逐个变成1。
+
+\textcolor{highlight1}{\textbf{核心观察：}}
+\begin{itemize}
+    \item 如果数组中已经存在1，那么只需要将其他非1元素逐个变成1，操作次数为 $n - count(1)$
+    \item 如果数组中不存在1，我们需要通过操作生成第一个1
+    \item 生成1的最短方式：找到最短的连续子数组，使得这些数的gcd为1
+\end{itemize}
+
+\textcolor{highlight1}{\textbf{算法步骤：}}
+\begin{enumerate}
+    \item 检查数组中是否已有1，如果有则直接返回 $n - count(1)$
+    \item 寻找最短的连续子数组使得gcd为1，设最短长度为 $minLen$
+    \item 如果找不到这样的子数组，返回-1
+    \item 否则，总操作次数为：$n + minLen - 2$
+\end{enumerate}
+
+\textcolor{highlight3}{\textbf{数学解释：}}
+\begin{itemize}
+    \item 生成第一个1需要 $minLen - 1$ 次操作（在最短gcd为1的子数组上操作）
+    \item 用这个1感染其他 $n - 1$ 个元素需要 $n - 1$ 次操作
+    \item 总操作次数：$(minLen - 1) + (n - 1) = n + minLen - 2$
+\end{itemize}
+
+\section{代码实现}
+\begin{lstlisting}[language=c++]
+class Solution {
+public:
+    const int inf = 1e9;
+    int minOperations(vector<int>& nums) {
+        int cnt = inf;
+        `\textcolor{highlight1}{// 计算从位置x开始，需要多少次操作能得到gcd=1}`
+        auto cul = [&](int x) {
+            int GCD = nums[x];
+            int cnt = 0;
+            for (int i = x + 1; i < nums.size() && GCD != 1; i++){
+                GCD = gcd(GCD, nums[i]);
+                cnt++;
+            }
+            return (GCD == 1 ? cnt : inf);
+        };
+
+        `\textcolor{highlight1}{// 寻找生成1的最短距离}`
+        for (int i = 0; i < nums.size(); i++) cnt = min(cnt, cul(i));
+        if(cnt == inf)return -1;
+        
+        `\textcolor{highlight1}{// 总操作次数 = 生成第一个1的操作 + 用1感染其他元素的操作}`
+        int res = nums.size() + cnt - 1;
+        `\textcolor{highlight1}{// 如果已有1，直接计算感染操作}`
+        if(find(nums.begin(),nums.end(),1) != nums.end())
+            res = nums.size() - count(nums.begin(),nums.end() , 1);
+        return res;
+    }
+};
+\end{lstlisting}
+
+\section{复杂度分析}
+\begin{itemize}
+    \item \textbf{时间复杂度:} $O(n^2)$，其中 $n$ 是数组长度。最坏情况下需要检查所有子数组。
+    \item \textbf{空间复杂度:} $O(1)$，只使用了常数级别的额外空间。
+\end{itemize}
+
+\section{算法优化}
+实际上，我们可以通过预处理来优化gcd的计算，但考虑到 $n \leq 50$，当前的解法已经足够高效。
+
+\textcolor{highlight1}{\textbf{关键洞察：}}
+\begin{itemize}
+    \item 问题的核心是找到生成第一个1的最短路径
+    \item 一旦有了1，剩下的操作就是线性的
+    \item 使用gcd的单调性：连续子数组的gcd随着长度增加是非递增的, 从而利用线段树优化到 $O(nlogn)$
+\end{itemize}
+
+\end{document}

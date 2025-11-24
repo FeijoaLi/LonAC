@@ -1,0 +1,68 @@
+\documentclass{ctexart}
+
+% === 关键：引入 standalone 包 ===
+% 它的作用是：当主文件读取子文件时，会自动跳过子文件的 \documentclass 到 \begin{document} 之间的内容
+\usepackage{standalone} 
+
+% 设置章节格式 (ctexset 建议保留在 tex 文件里，或者也放进 sty)
+\ctexset{
+    section = {
+        titleformat = \raggedright,
+        name = {,、},
+        number = \chinese{section}
+    }
+}
+
+% === 引入公共配置 ===
+\usepackage{my_style} 
+
+
+
+\begin{document}
+
+% 目录设置...
+% 生成目录
+% 设置目录格式
+
+\renewcommand{\contentsname}{\centering\Huge\bfseries 目录}
+\renewcommand{\cfttoctitlefont}{\hfill\Huge\bfseries}  % 目录标题字体
+\renewcommand{\cftaftertoctitle}{\hfill\mbox{}}        % 确保标题居中
+\renewcommand{\cftsecfont}{\Large\bfseries}            % 一级章节字体（增大）
+\renewcommand{\cftsecpagefont}{\Large\bfseries}        % 一级章节页码字体（增大）
+\renewcommand{\cftsubsecfont}{\large\bfseries}         % 二级章节字体（增大） 
+\renewcommand{\cftsubsecpagefont}{\large\bfseries}     % 二级章节页码字体（增大）
+\renewcommand{\cftsecdotsep}{\cftdotsep}               % 点状分隔符
+
+% 调整目录间距
+\setlength{\cftbeforesecskip}{25pt}                    % 增大章节间间距
+\setlength{\cftbeforesubsecskip}{15pt}                 % 增大子章节间间距
+\setlength{\cftaftertoctitleskip}{30pt}                % 增大目录标题后的间距
+
+% 增加目录项之间的额外间距
+\addtocontents{toc}{\setlength{\parskip}{7pt}}        % 段落间距
+\addtocontents{toc}{\setlength{\itemsep}{5pt}}         % 项目间距
+\tableofcontents
+\thispagestyle{empty}  % 目录页不显示页脚
+
+\newpage
+\thispagestyle{empty}  % 空白页不显示页脚
+\subsection*{}
+
+\newpage
+\setcounter{page}{1}  % 重置页码为1，从正文开始计算页码
+
+
+% === 引入子文件 ===
+% 注意：这里仍然使用 \input
+\input{number.tex}
+\newpage
+
+\input{seat.tex}
+\newpage
+
+\input{xor.tex} 
+\newpage
+
+\input{polygon.tex}
+\newpage
+\end{document}

@@ -1,0 +1,134 @@
+\documentclass{ctexart}
+\ctexset{
+    section = {
+        titleformat = \raggedright,
+        name = {,、},
+        number = \chinese{section}
+    }
+}
+
+\usepackage[a4paper,top=2.54cm,bottom=2.54cm,left=3.18cm,right=3.18cm]{geometry}
+\usepackage{eso-pic,graphicx}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{pifont}  
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\definecolor{highlightpink}{RGB}{255,0,180}  % 粉红色
+\definecolor{codebg}{RGB}{245,245,245}       % 代码背景色
+\definecolor{lightgray}{gray}{0.8}           % 浅灰色（替代gray!20）
+\definecolor{commentcolor}{RGB}{0,128,0}     % 注释颜色（深绿色）
+\definecolor{highlight1}{RGB}{255,50,50}     % 红色高亮
+\definecolor{highlight2}{RGB}{0,100,200}     % 蓝色高亮
+\definecolor{highlight3}{RGB}{150,0,150}     % 紫色高亮
+
+% 设置超链接样式
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+    pdftitle={LeetCode 1526 题解},
+    pdfauthor={Feijoa_Li}
+}
+
+% 设置 listings 样式
+\lstset{
+basicstyle=\ttfamily\small,
+language=C++,
+frame=single,
+breaklines=true,
+backgroundcolor=\color{codebg},
+escapeinside=``,
+commentstyle=\color{commentcolor},
+keywordstyle=\color{blue},
+stringstyle=\color{red},
+rulecolor=\color{black},
+framesep=5pt,
+xleftmargin=10pt,
+xrightmargin=10pt
+}
+
+\title{\href{https://leetcode.cn/problems/minimum-number-of-increments-on-subarrays-to-form-a-target-array/description/}{LeetCode 1526. 形成目标数组的子数组最少增加次数}}
+\author{Feijoa\_Li}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{题目描述}
+给定一个整数数组 \texttt{target} 和一个初始数组 \texttt{initial}，\texttt{initial} 数组与 \texttt{target} 数组维度相同且初始所有元素为0。每次操作可以选择任意子数组，并将子数组中每个元素增加1。返回从 \texttt{initial} 得到 \texttt{target} 的最少操作次数。
+
+
+
+\section{解题思路}
+本题可以使用动态规划的思想解决。
+\textcolor{highlight1}{$dp[i]$} 表示将前 $i+1$ 个元素
+从目标值减少到 $0$ 所需的最少操作次数。
+注意，从目标数组减少到 $0$ 的操作次数与从 $0$ 
+增加到目标数组的操作次数相同。
+
+\textcolor{highlight1}{\textbf{初始状态：}}
+\[
+dp[0] = target[0]
+\]
+\\
+\textcolor{highlight1}{\textbf{状态转移方程：}}
+对于 $i \geq 1$，考虑 $target[i]$ 与 $target[i-1]$ 的关系：
+\begin{itemize}
+\item \textcolor{highlight2}{如果 $target[i] \leq target[i-1]$}，
+则在减少前 $i$ 个元素的过程中,对于 $target[i-1]$ 
+必然执行了 $target[i-1]$ 次操作(因为 $target[i-1] == 0$ )\par
+因此我们大可将每一步包含着 $target[i-1]$ 的操作
+再往右延伸一格,影响到 $target[i]$ 上.\par
+所以此时:
+\[
+dp[i] = dp[i - 1]
+\]
+\\
+\item \textcolor{highlight2}{如果 $target[i] > target[i-1]$}
+我们依旧用上面的思考方式,但此时，$target[i-1]$ 的操作
+无法使 $target[i]$ 减少到 $0$ ，
+还需要额外增加 $target[i] - target[i-1]$ 次操作.\par
+所以此时:
+\[
+dp[i] = dp[i - 1] + (target[i] - target[i-1])
+\]
+\\
+\end{itemize}
+因此，整合两个式子得出\textcolor{highlight3}{\textbf{状态转移方程}}为：
+\[
+\textcolor{highlight3}{dp[i] = dp[i-1] + \max(0, target[i] - target[i-1])}
+\]
+
+所以最终答案为 $dp[n-1]$，其中 $n$ 是数组长度。
+
+由于 $dp[i]$ 只依赖于 $dp[i-1]$，我们可以使用一个变量来滚动计算，节省空间。
+
+\section{代码实现}
+\begin{lstlisting}[language=C++]
+int cnt = target[0]; `\textcolor{highlight1}{// 初始化 dp[0]}`
+for (int i = 1; i < target.size(); i++) {
+    `\textcolor{highlight3}{// 状态转移: dp[i] = dp[i-1] + max(0, target[i] - target[i-1])}`
+    cnt += max(0, target[i] - target[i - 1]);
+}
+return cnt;
+\end{lstlisting}
+
+\section{复杂度分析}
+\begin{itemize}
+    \item \textbf{时间复杂度:} $O(n)$，其中 $n$ 是数组长度。只需遍历数组一次。
+    \item \textbf{空间复杂度:} $O(1)$，仅使用常数额外空间。
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,190 @@
+\documentclass{ctexart}
+\ctexset{
+    section = {
+        titleformat = \raggedright,
+        name = {,、},
+        number = \chinese{section}
+    }
+}
+\usepackage[a4paper,top=2.54cm,bottom=2.54cm,left=3.18cm,right=3.18cm]{geometry}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{pifont}  
+\usepackage{xcolor}
+% \usepackage{colortbl}
+\usepackage{listings}
+\usepackage{enumitem}
+
+\definecolor{lightpink}{RGB}{184,83,182}
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{emphcolor}{RGB}{199,21,133}
+\definecolor{important}{RGB}{220,20,60}
+\definecolor{highlight}{RGB}{0,100,0}
+\definecolor{sumregion}{RGB}{255,200,200}
+\definecolor{currentcell}{RGB}{255,0,0}
+
+\lstset{
+basicstyle=\ttfamily\small,
+language=C++,
+frame=single,
+breaklines=true,
+backgroundcolor=\color{codebg},
+escapeinside=``,
+commentstyle=\color{green!60!black},
+keywordstyle=\color{blue},
+stringstyle=\color{red},
+rulecolor=\color{black},
+framesep=5pt,
+xleftmargin=10pt,
+xrightmargin=10pt
+}
+
+\setlist[enumerate,1]{label=\arabic*., leftmargin=2em}
+\setlist[enumerate,2]{label=（\arabic*）, leftmargin=3em}
+\setlist[enumerate,3]{label=\roman*, leftmargin=4em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{解码未来AI教育 \quad 编程题解}
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+\section*{L1499 : 宽度搜索1 \ding{78}\ding{78}\ding{78}} 
+
+\subsection*{题目描述}
+有一个 $n \times m$ 的棋盘，在某个点 $(x,y)$ 上有一个马，要求计算出马到达棋盘上任意一个点最少要走几步。
+
+马每次走时，只能根据象棋的规则，走日字形状。
+
+\subsection*{输入输出格式}
+\textbf{输入：}一行四个整数，分别为 $n, m, x, y$（$1 \le x \le n \le 400$，$1 \le y \le m \le 400$）。\par
+\textbf{输出：}一个 $n \times m$ 的矩阵，代表马到达某个点最少要走几步（不能到达则输出 $-1$）。\par
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|X|X|}
+\hline
+\textbf{输入示例} & \textbf{输出示例}     \\    
+\hline
+3 3 1 1 & 0 3 2 \\ 
+ & 3 -1 1 \\ 
+ & 2 1 4 \\ 
+\hline
+\end{tabularx}  
+\end{table}
+
+\subsection*{样例分析}
+以输入 \texttt{3 3 1 1} 为例：
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+0 & 3 & 2 \\
+\hline
+3 & -1 & 1 \\
+\hline
+2 & 1 & 4 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+\item \textbf{(1,1)} 是起点，距离为0
+
+\item \textbf{(1,2)} 需要3步：\texttt{(1,1)→(3,2)→(1,3)→(2,1)→(1,2)}
+
+\item \textbf{(1,3)} 需要2步：\texttt{(1,1)→(2,3)→(1,3)}
+
+\item \textbf{(2,1)} 需要3步：\texttt{(1,1)→(3,2)→(1,3)→(2,1)} 或 \texttt{(1,1)→(2,3)→(3,1)→(2,1)}
+
+\item \textbf{(2,2)} 无法到达
+
+\item \textbf{(2,3)} 需要1步：\texttt{(1,1)→(2,3)}
+
+\item \textbf{(3,1)} 需要2步：\texttt{(1,1)→(2,3)→(3,1)} 或 \texttt{(1,1)→(3,2)→(3,1)}
+
+\item \textbf{(3,2)} 需要1步：\texttt{(1,1)→(3,2)}
+
+\item \textbf{(3,3)} 需要4步：\texttt{(1,1)→(3,2)→(1,3)→(2,1)→(3,3)}
+\end{itemize}
+
+
+
+
+
+\subsection*{算法分析}
+
+\begin{enumerate}
+\item \textcolor{highlight}{\textbf{问题分析}}\\
+这是一个典型的\textcolor{emphcolor}{\textbf{最短路径}}问题，由于棋盘上每个位置的移动代价相同（每次移动一步），可以使用\textcolor{emphcolor}{\textbf{广度优先搜索（BFS）}}来解决。
+
+\item \textcolor{highlight}{\textbf{马走日的8个方向}}\\
+在国际象棋中，马走"日"字，有8个可能的移动方向：
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+\draw[step=1cm, gray, very thin] (0,0) grid (5,5);
+\node at (2.5,2.5) {马};
+\draw[->, red, thick] (2.5,2.5) -- (0.5,3.5);
+\draw[->, red, thick] (2.5,2.5) -- (1.5,4.5);
+\draw[->, blue, thick] (2.5,2.5) -- (3.5,4.5);
+\draw[->, blue, thick] (2.5,2.5) -- (4.5,3.5);
+\draw[->, green, thick] (2.5,2.5) -- (4.5,1.5);
+\draw[->, green, thick] (2.5,2.5) -- (3.5,0.5);
+\draw[->, orange, thick] (2.5,2.5) -- (1.5,0.5);
+\draw[->, orange, thick] (2.5,2.5) -- (0.5,1.5);
+\end{tikzpicture}
+\end{center}
+
+用坐标表示这8个方向：
+\begin{lstlisting}[language=C++]
+int dx[8] = {-2, -1, 1, 2, 2, 1, -1, -2};
+int dy[8] = {1, 2, 2, 1, -1, -2, -2, -1};
+\end{lstlisting}
+
+\item \textcolor{highlight}{\textbf{BFS算法步骤}}
+\begin{enumerate}
+\item 初始化距离数组，所有位置设为-1（表示未访问）
+\item 将起始位置加入队列，距离设为0
+\item BFS遍历：
+\begin{itemize}
+\item 从队列中取出当前位置
+\item 遍历8个方向，计算下一个位置
+\item 如果新位置在棋盘内且未被访问，更新距离并入队
+\end{itemize}
+\end{enumerate}
+\end{enumerate}
+
+\subsection*{代码实现}
+
+\begin{lstlisting}[language=C++]
+while (!q.empty()) {
+    array<int, 2> TMP = q.front();
+    int cx = TMP[0], cy = TMP[1];
+    q.pop();
+    for (int i = 0; i < 8; i++) {
+        int nx = cx + dx[i], ny = cy + dy[i];
+        `//判断是否越界`
+        if (nx < 0 || nx >= n || ny < 0 || ny >= m) continue;
+        if (res[nx][ny] > res[cx][cy] + 1) {
+            res[nx][ny] = res[cx][cy] + 1;
+            q.push({nx, ny});
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection*{拓展思考}
+\begin{itemize}
+\item 如果要求输出具体的行走路径而不仅仅是步数，该如何修改？
+\item 如果棋盘上有障碍物,且具有拌马腿的限制，该如何处理？
+\end{itemize}
+
+\end{document}

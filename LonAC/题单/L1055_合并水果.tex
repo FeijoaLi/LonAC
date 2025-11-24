@@ -1,0 +1,195 @@
+%L1055 : 合并水果
+\documentclass{ctexart}
+\ctexset{
+    section = {
+        titleformat = \raggedright,
+        name = {,、},
+        number = \chinese{section}
+    }
+}
+\usepackage[a4paper,top=2.54cm,bottom=2.54cm,left=3.18cm,right=3.18cm]{geometry}
+\usepackage{eso-pic,graphicx}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{pifont}  
+\usepackage{listings}
+\usepackage{xcolor}
+
+
+
+
+\definecolor{highlightpink}{RGB}{255,0,180}  % 粉红色
+\definecolor{codebg}{RGB}{245,245,245}       % 代码背景色
+\definecolor{lightgray}{gray}{0.8}           % 浅灰色（替代gray!20）
+\definecolor{commentcolor}{RGB}{0,128,0}     % 注释颜色（深绿色）
+
+% 设置 listings 样式
+\lstset{
+basicstyle=\ttfamily\small,
+language=C++,
+frame=single,
+breaklines=true,
+backgroundcolor=\color{codebg},
+escapeinside=``,
+commentstyle=\color{commentcolor},
+keywordstyle=\color{blue},
+stringstyle=\color{red},
+rulecolor=\color{black},
+framesep=5pt,
+xleftmargin=10pt,
+xrightmargin=10pt
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{解码未来AI教育 \quad 编程题解}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\labelenumii}{\Alph{enumii}.}
+
+\begin{document}
+
+\section*{合并水果 \ding{78}\ding{78}} 
+
+\subsection*{题目描述}
+在一个果园里，张力恒同学已经将所有的果子打了下来，而且按果子的不同种类分成了不同的堆。张力恒决定把所有的果子合成一堆。
+
+每一次合并，张力恒可以把两堆果子合并到一起，消耗的体力等于两堆果子的重量之和。可以看出，所有的果子经过 $n-1$ 次合并之后，就只剩下一堆了。张力恒在合并果子时总共消耗的体力等于每次合并所耗体力之和。
+
+因为还要花大力气把这些果子搬回家，所以张力恒在合并果子时要尽可能地节省体力。假定每个果子重量都为 1，并且已知果子的种类数和每种果子的数目，你的任务是设计出合并的次序方案，使多多耗费的体力最少，并输出这个最小的体力耗费值。
+
+\subsection*{输入输出格式}
+\textbf{输入：}第一行，一个整数 $n(1 \leq n \leq 10000)$，表示果子的种类数；  
+第二行，包含 $n$ 个整数，用空格分隔，第 $i$ 个整数 $a_i(1 \leq a_i \leq 20000)$，表示第 $i$ 种果子的数目。  
+
+\textbf{输出：}一个整数，也就是最小的体力耗费值。输入数据保证这个值小于 $2^{31}$。
+
+\vspace{12pt}
+\begin{table}[h]
+\centering
+\begin{tabularx}{0.85\textwidth}{|X|X|}
+\hline
+\textbf{输入示例} & \textbf{输出示例}     \\    
+\hline
+3 & 15   \\ 
+1 2 9 & \\ 
+\hline
+\end{tabularx}  
+\end{table}
+
+\subsection*{样例解释}
+\begin{table}[h]
+\centering
+\begin{tabularx}{0.95\textwidth}{|c|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|}
+\hline
+\textbf{步骤} & \textbf{当前果堆状态} & \textbf{合并的果堆} & \textbf{本次消耗体力} & \textbf{累计消耗体力} \\ 
+\hline
+初始状态 & 1, 2, 9 & - & 0 & 0 \\ 
+\hline
+第一步 & 1, 2, 9 & 1 + 2 = 3 & 3 & 3 \\ 
+\hline
+第二步 & 3, 9 & 3 + 9 = 12 & 12 & 15 \\ 
+\hline
+\end{tabularx}  
+\end{table}
+
+\subsection*{算法分析}
+\begin{enumerate}
+\item \textbf{问题分析} \\ 
+要使\textcolor{highlightpink}{总体力消耗最小}，每次需要合并重量\textcolor{highlightpink}{最小}的两堆果子，重量小的果子被合并次数多，重量大的果子被合并次数少，总体力消耗最小。
+
+\item \textbf{算法选择}
+\begin{enumerate}
+\item \textbf{朴素思想 : }  
+每次从果堆中选出\textcolor{highlightpink}{最小}的两堆进行合并，再将合并后的重量插入数组并\textcolor{highlightpink}{重新排序}，
+重复操作直到只剩一堆。
+每次排序花费时间为 $O(n \log n)$ , 一共进行 $n - 1$ 次合并,
+所以总体时间复杂度为 $O(n^2 \log n)$ ，无法在 $1s$ 内执行完。
+
+\item \textbf{使用优先队列（\textcolor{blue}{priority\_queue}) 优化 : }  
+使用\textcolor{blue}{最小堆}维护\textcolor{highlightpink}{最小元素}，每次取出和插入元素均 $O(\log n)$，一共进行 $n - 1$ 次取出和插入，
+因此总体复杂度 $O(n \log n)$ ，可以在 $1s$ 内执行完毕。
+
+\item \textbf{实现思路}
+\begin{itemize}
+\setlength{\itemsep}{1pt}
+\setlength{\parskip}{0pt}
+\item 将所有果堆的{重量}放入\textcolor{blue}{最小堆}中
+\item 每次取出两个\textcolor{highlightpink}{最小}元素，{合并}并累加\textcolor{highlightpink}{体力消耗}
+\item 将合并后的{新堆重量}放回堆中，重复直到堆只剩一个元素
+\end{itemize}
+\end{enumerate}
+\end{enumerate}
+
+\subsection*{背景知识}
+\begin{itemize}
+    \item \textbf{\textcolor{blue}{优先队列（堆）}}：一种特殊的数据结构，可以快速获取和删除\textcolor{highlightpink}{最小（或最大）元素}。
+\begin{lstlisting}
+priority_queue<int, vector<int>, greater<int>> pq;
+\end{lstlisting}
+
+\begin{itemize}
+  \setlength{\itemsep}{2pt} 
+  \setlength{\parskip}{0pt}
+
+  \item \textbf{\textcolor{blue}{第一个参数 \texttt{int}}}：指定队列中存储的元素类型
+  \item \textbf{\textcolor{blue}{第二个参数 \texttt{vector<int>}}}：指定底层使用的容器，通常是vector
+  \item \textbf{\textcolor{blue}{第三个参数 \texttt{greater<int>}}}：比较函数，决定元素的排列顺序
+    \begin{itemize}
+      \setlength{\itemsep}{1pt} 
+      \setlength{\parskip}{0pt}
+      \item \textcolor{highlightpink}{\texttt{less<int>}}：\textcolor{blue}{最大堆}，最大的元素在顶部（默认值）
+      \item \textcolor{highlightpink}{\texttt{greater<int>}}：\textcolor{blue}{最小堆}，最小的元素在顶部
+    \end{itemize}
+\end{itemize}
+
+\textbf{常用操作：}
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{10pt}
+\begin{tabularx}{0.95\textwidth}{>{\centering\arraybackslash}p{3cm}|X|>{\centering\arraybackslash}p{2.5cm}}
+\textbf{操作} & \textbf{功能说明} & \textbf{时间复杂度} \\
+\hline
+\texttt{pq.push(x)} & 将元素 \texttt{x} 插入堆 & $O(\log n)$ \\
+\hline
+\texttt{pq.pop()} & 删除堆顶部（最小或最大）元素 & $O(\log n)$ \\
+\hline
+\texttt{pq.top()} & 获取堆顶部元素 & $O(1)$ \\
+\hline
+\texttt{pq.empty()} & 判断堆是否为空 & $O(1)$ \\
+\hline
+\texttt{pq.size()} & 获取堆中元素个数 & $O(1)$ \\
+\hline
+\end{tabularx}
+\end{table}
+\end{itemize}
+
+
+
+\subsection*{核心代码}
+\begin{lstlisting}
+while (pq.size() >= 2) { `// 重复操作直到堆中只剩一个元素`
+    int u = pq.top();
+    pq.pop();
+    int v = pq.top();
+    pq.pop();
+    cnt += u + v; `// 取出两个最小的元素，合并它们，并累加体力消耗`
+    pq.push(u + v); `// 合并结果放回堆中`
+}
+\end{lstlisting}
+
+\subsection*{拓展思考}
+\begin{itemize}
+\item 如果每次合并三堆、四堆，甚至 k($k \leq 10^5$) 堆果子，算法该如何修改？
+\item 如果要求改成求消耗体力的\textcolor{highlightpink}{最大值}，该如何实现？
+\end{itemize}
+
+\end{document}

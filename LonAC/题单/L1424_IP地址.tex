@@ -1,0 +1,190 @@
+\documentclass{ctexart}
+\ctexset{
+    section = {
+        titleformat = \raggedright,
+        name = {,、},
+        number = \chinese{section}
+    }
+}
+\usepackage[a4paper,top=2.54cm,bottom=2.54cm,left=3.18cm,right=3.18cm]{geometry}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{pifont}  
+\usepackage[table]{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{eso-pic} % 添加水印的包
+
+% 定义所有使用的颜色
+\definecolor{lightpink}{RGB}{184,83,182}
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{emphcolor}{RGB}{199,21,133}
+\definecolor{important}{RGB}{220,20,60}
+\definecolor{highlight}{RGB}{0,100,0}
+\definecolor{sumregion}{RGB}{255,200,200}
+\definecolor{currentcell}{RGB}{255,0,0}
+
+% 修复的水印设置 - 使用更兼容的方法
+% \AddToShipoutPictureBG{%
+%   \AtPageCenter{%
+%     \makebox[0pt]{%
+%       \includegraphics[width=0.6\paperwidth,height=0.6\paperheight,keepaspectratio]{sy.png}%
+%     }%
+%   }%
+% }
+
+% 如果上面的方法仍然有问题，可以使用TikZ来实现透明度
+\AddToShipoutPictureFG{%
+  \AtPageCenter{%
+    \begin{tikzpicture}[remember picture,overlay]
+      \node[opacity=0.1] at (0,0) {\includegraphics[width=0.9\paperwidth,height=0.5\paperheight,keepaspectratio]{sy.png}};
+    \end{tikzpicture}%
+  }%
+}
+
+\lstset{
+basicstyle=\ttfamily\small,
+language=C++,
+frame=single,
+breaklines=true,
+backgroundcolor=\color{codebg},
+escapeinside=``,
+commentstyle=\color{green!60!black},
+keywordstyle=\color{blue},
+stringstyle=\color{red},
+rulecolor=\color{black},
+framesep=5pt,
+xleftmargin=10pt,
+xrightmargin=10pt
+}
+
+\setlist[enumerate,1]{label=\arabic*., leftmargin=2em}
+\setlist[enumerate,2]{label=（\arabic*）, leftmargin=3em}
+\setlist[enumerate,3]{label=\roman*, leftmargin=4em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{解码未来AI教育 \quad 编程题解}
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+\section*{字符串匹配2: IP地址 \ding{78}\ding{78}} 
+
+\subsection*{题目描述}
+给定一个字符串 $s$，请你判断它是否是一个有效的 IPv4 地址。
+
+一个有效的 IPv4 地址由四个整数构成，这些整数位于 0 到 255 之间，用 '.' 分隔。
+
+每个整数不能有前导零（除非该整数本身就是 0），并且每个部分必须是非空的。
+
+\subsection*{输入输出格式}
+\textbf{输入：}输入包含多组测试数据。每组测试数据占一行，包含一个字符串 $s$ ($1 \le |s| \le 15$)。\par
+\qquad\quad 输入以文件结束符（EOF）结束。\par
+\textbf{输出：}对于每组测试数据，如果输入的字符串 $s$ 是一个有效的 IPv4 地址，则输出 "YES"；否则输出 "NO"。\par
+\qquad\quad 每个输出占一行。
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|X|X|}
+\hline
+\textbf{输入示例} & \textbf{输出示例}     \\    
+\hline
+192.168.1.1 & YES \\ 
+192.168.1.01 & NO \\ 
+0.0.0.0 & YES \\ 
+255.255.255.255 & YES \\ 
+\hline
+\end{tabularx}  
+\end{table}
+
+\subsection*{样例解释}
+\begin{itemize}
+\item \textbf{192.168.1.1}: 所有部分都在 0-255 范围内，没有前导零，格式正确，输出 YES
+\item \textbf{192.168.1.01}: 第四部分 "01" 有前导零，不符合要求，输出 NO
+\item \textbf{0.0.0.0}: 所有部分都是 0，允许单个 0，输出 YES
+\item \textbf{255.255.255.255}: 所有部分都在 0-255 范围内，没有前导零，格式正确，输出 YES
+\end{itemize}
+
+\subsection*{算法分析}
+
+\begin{enumerate}
+\item \textcolor{highlight}{\textbf{验证条件}}\\
+IPv4 地址验证需满足：
+\begin{itemize}
+\item 恰好包含 3 个点号 '.'，分成 4 个部分
+\item 每部分为 0-255 的整数且无前导零
+\end{itemize}
+
+\item \textcolor{highlight}{\textbf{实现思路}}\\
+\begin{enumerate}
+\item 按 '.' 分割字符串为 4 部分
+\item 验证每部分是否都是数字 且 大小在 0-255 范围内
+\item 验证无前导零
+\end{enumerate}
+\end{enumerate}
+
+\subsection*{代码实现：}
+
+\text{判断逻辑 : }
+\begin{lstlisting}
+bool check (string s) {
+    if (s.size() > 3 || s.size() == 0) return false; 
+    `//超出3位数，或者是空的 直接不满足[0,255]条件`
+    for (int i = 0; i < s.size(); i++) {
+        if (s[i] > '9' || s[i] < '0') return false;
+        `//验证都是数字`
+    }
+    for (int i = 0; i < s.size(); i++) { `//验证无前导零`
+        if (s[i] == '0' && s.size() > 1) {
+            return false;
+        } else if (s.size() > 1) {
+            break;
+        }
+    }
+    
+    int num = stoi(s); `//字符串转换为数字`
+    if (num < 0 || num > 255) return false; `//判断是否在[0,255]范围内`
+    return true;
+};
+\end{lstlisting}
+
+\text{字符串处理 : }
+\begin{lstlisting}
+while (cin >> s) {
+    string t;
+    bool ok = true;
+    for (int i = 0; i < s.size(); i++) {
+        if (s[i] == '.') { ` // 遇到分割符号，检查当前部分是否满足要求`
+            ok &= check(t);
+            t.clear();
+        } else {
+            t += s[i];
+        }
+    }
+
+    ok &= check(t); ` // 检查最后一部分`
+
+    if (ok) {
+        cout << "YES\n";
+    } else {
+        cout << "NO\n";
+    }
+}
+\end{lstlisting}
+
+\subsection*{拓展思考 :}
+\begin{itemize}
+\item 给定任意一个字符串和
+一个分割的字符集，
+如何实现一个通用的字符串分割函数?
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,12 @@
+{
+  "files.exclude": {
+    "**/*.aux": true,
+    "**/*.fdb_latexmk": true,
+    "**/*.fls": true,
+    "**/*.gz": true,
+    "**/*.log": true,
+    "**/*.pdf": true,
+    "**/*.toc": true,
+    "**/*.out": true,
+  }
+}

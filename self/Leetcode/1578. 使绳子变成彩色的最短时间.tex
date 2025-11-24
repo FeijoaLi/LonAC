@@ -1,0 +1,195 @@
+\documentclass{ctexart}
+\ctexset{
+    section = {
+        titleformat = \raggedright,
+        name = {,、},
+        number = \chinese{section}
+    }
+}
+
+\usepackage[a4paper,top=2.54cm,bottom=2.54cm,left=3.18cm,right=3.18cm]{geometry}
+\usepackage{eso-pic,graphicx}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{pifont}  
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\definecolor{highlightpink}{RGB}{255,0,180}  % 粉红色
+\definecolor{codebg}{RGB}{245,245,245}       % 代码背景色
+\definecolor{lightgray}{gray}{0.8}           % 浅灰色（替代gray!20）
+\definecolor{commentcolor}{RGB}{0,128,0}     % 注释颜色（深绿色）
+\definecolor{highlight1}{RGB}{255,50,50}     % 红色高亮
+\definecolor{highlight2}{RGB}{0,100,200}     % 蓝色高亮
+\definecolor{highlight3}{RGB}{150,0,150}     % 紫色高亮
+
+
+\AddToShipoutPictureFG{%
+  \AtPageCenter{%
+    \begin{tikzpicture}[remember picture,overlay]
+      \node[opacity=0.1] at (0,0) {\includegraphics[width=0.8\paperwidth,height=0.6\paperheight,keepaspectratio]{sy.png}};
+    \end{tikzpicture}%
+  }%
+}
+
+
+% 设置超链接样式
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+    pdftitle={LeetCode 1578 题解},
+    pdfauthor={Feijoa_Li}
+}
+
+
+
+% 设置 listings 样式
+\lstset{
+basicstyle=\ttfamily\small,
+language=C++,
+frame=single,
+breaklines=true,
+backgroundcolor=\color{codebg},
+escapeinside=``,
+commentstyle=\color{commentcolor},
+keywordstyle=\color{blue},
+stringstyle=\color{red},
+rulecolor=\color{black},
+framesep=5pt,
+xleftmargin=10pt,
+xrightmargin=10pt
+}
+
+\title{\href{https://leetcode.cn/problems/minimum-time-to-make-rope-colorful/description/}{LeetCode 1578. 使绳子变成彩色的最短时间}}
+\author{Feijoa\_Li}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{题目描述}
+Alice 把 n 个气球排列在一根绳子上。给你一个下标从 0 开始的字符串 \texttt{colors}，其中 \texttt{colors[i]} 是第 i 个气球的颜色。
+
+Alice 想要把绳子装扮成\textbf{五颜六色的}，且她不希望两个连续的气球涂着相同的颜色，所以她喊来 Bob 帮忙。Bob 可以从绳子上移除一些气球使绳子变成彩色。给你一个下标从 0 开始的整数数组 \texttt{neededTime}，其中 \texttt{neededTime[i]} 是 Bob 从绳子上移除第 i 个气球需要的时间（以秒为单位）。
+
+返回 Bob 使绳子变成彩色需要的\textbf{最少时间}。
+
+\section{解题思路}
+本题可以使用\textcolor{highlight1}{动态规划}的方法解决。
+
+\textcolor{highlight1}{\textbf{状态定义：}}
+定义 \texttt{dp[i][j]} 表示处理到第 i 个气球，且第 i 个气球的颜色为 j 时的最小花费时间。其中 j 的范围是 0-25（对应 26 个小写字母）和 26（表示移除该气球）。
+
+\textcolor{highlight1}{\textbf{初始状态：}}
+\begin{itemize}
+    \item 第一个气球被移除：\texttt{dp[26] = neededTime[0]}
+    \item 第一个气球保留：\texttt{dp[colors[0]-'a'] = 0}
+    \item 其他状态初始化为无穷大
+\end{itemize}
+
+\textcolor{highlight1}{\textbf{状态转移：}}
+对于第 i 个气球（i ≥ 1）：
+\begin{itemize}
+    \item 如果当前气球被移除，那么前一个气球可以是任意状态，总时间增加 \texttt{neededTime[i]}
+    \item 如果当前气球保留（颜色为 \texttt{col}），那么前一个气球不能是相同颜色，需要找到前一个气球所有非 \texttt{col} 颜色的最小花费
+\end{itemize}
+
+\textcolor{highlight3}{\textbf{状态转移方程}}为：
+\[
+\begin{cases}
+\texttt{dp[j] += neededTime[i]} & \text{对于所有 j（移除当前气球）} \\
+\texttt{dp[col] = min(dp[col], Min)} & \text{其中 Min 是前一个状态中非 col 颜色的最小值}
+\end{cases}
+\]
+
+\section{代码实现}
+\begin{lstlisting}[language=c++]
+class Solution {
+public: `\textcolor{highlight1}{// 二维数组dp}` 
+const int inf = 1e9 + 7;
+    int minCost(string colors, vector<int>& neededTime) {
+        int n = neededTime.size();
+        vector<vector<int>> dp(n,vector<int>(27,inf));
+        dp[0][26] = neededTime[0];
+        dp[0][colors[0] - 'a'] = 0;
+        for(int i = 1 ; i < n ; i ++){
+            int Min = inf;
+            for(int j = 0 ; j <= 26 ; j ++) {
+                if(j != colors[i] - 'a')Min = min(dp[i - 1][j] , Min);
+                dp[i][j] = min(dp[i][j] , dp[i - 1][j] + neededTime[i]);
+            }
+            dp[i][colors[i] - 'a'] = min(dp[i][colors[i] - 'a'] , Min);
+        }
+        
+        return ranges::min(dp[n - 1]);
+    }
+};
+\end{lstlisting}
+\begin{lstlisting}[language=C++]
+class Solution {
+public: `\textcolor{highlight1}{// 滚动数组优化dp}` 
+    const int inf = 1e9 + 7; 
+    int minCost(string colors, vector<int>& neededTime) {
+        int n = neededTime.size();
+        vector<int> dp(27, inf);
+        `\textcolor{highlight1}{// 初始状态：第一个气球}` 
+        dp[26] = neededTime[0];  `\textcolor{commentcolor}{// 移除第一个气球}`
+        dp[colors[0] - 'a'] = 0; `\textcolor{commentcolor}{// 保留第一个气球}`
+        
+        for (int i = 1; i < n; i++) {
+            int Min = inf;
+            int col = colors[i] - 'a';
+            `\textcolor{highlight3}{// 找到前一个状态中非当前颜色的最小花费}`
+            for (int j = 0; j <= 26; j++) {
+                if (j != col) Min = min(dp[j], Min);
+                `\textcolor{highlight3}{// 移除当前气球，所有状态时间增加}`
+                dp[j] += neededTime[i];
+            }
+            `\textcolor{highlight3}{// 保留当前气球，只能从前一个非当前颜色的状态转移}`
+            dp[col] = min(dp[col], Min);
+        }
+
+        return ranges::min(dp);
+    }
+};
+\end{lstlisting}
+
+\section{复杂度分析}
+\begin{itemize}
+    \item \textbf{时间复杂度:} $O(27 \times n)$，其中 $n$ 是数组长度。对于每个气球需要遍历 27 个状态。
+    \item \textbf{空间复杂度:} $O(27)$，只需要维护一个大小为 27 的状态数组。
+\end{itemize}
+
+\section{算法优化}
+实际上，本题还有更优的贪心解法：对于每一段连续相同颜色的气球，我们保留其中移除时间最大的那个，移除其他的气球。这样可以达到最优解。
+\begin{lstlisting}[language=c++]
+class Solution {
+public: `\textcolor{highlight1}{// 贪心}` 
+    const int inf = 1e9 + 7;
+    int minCost(string colors, vector<int>& neededTime) {
+        int res = 0, col = ' ', bef = 0;
+        for (int i = 0; i < neededTime.size(); i++) {
+            if (col == colors[i]) {
+                res += min(bef, neededTime[i]);
+                bef = max(bef, neededTime[i]);
+            } else {
+                col = colors[i];
+                bef = neededTime[i];
+            }
+        }
+        return res;
+    }
+};
+\end{lstlisting}
+\end{document}

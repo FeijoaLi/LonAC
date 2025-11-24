@@ -1,0 +1,149 @@
+\documentclass{ctexart} % 子文件也要声明类型
+
+% === 引入公共配置 ===
+% 这样单独编译时，它就有颜色和代码高亮了
+\usepackage{my_style} 
+
+\begin{document} 
+% 注意：主文件读取时，会忽略上面的所有内容，直接从这里开始读取
+
+\section{[CSP-J 2025] 异或和 / xor} 
+
+\subsection*{题目描述}
+小 R 有一个长度为 $n$ 的非负整数序列 $a_1, a_2, \dots, a_n$。定义一个区间 $[l, r]$ ($1 \leq l \leq r \leq n$) 的权值为 $a_l, a_{l+1}, \dots, a_r$ 的二进制按位异或和，即 $a_l \oplus a_{l+1} \oplus \dots \oplus a_r$，其中 $\oplus$ 表示二进制按位异或。
+
+小 X 给了小 R 一个非负整数 $k$。小 X 希望小 R 选择序列中尽可能多的不相交的区间，使得每个区间的权值均为 $k$。两个区间 $[l_1, r_1], [l_2, r_2]$ 相交当且仅当两个区间同时包含至少一个相同的下标，即存在 $1 \leq i \leq n$ 使得 $l_1 \leq i \leq r_1$ 且 $l_2 \leq i \leq r_2$。
+
+例如，对于序列 $[2, 1, 0, 3]$，若 $k = 2$，则小 R 可以选择区间 $[1, 1]$ 和区间 $[2, 4]$，权值分别为 $2$ 和 $1 \oplus 0 \oplus 3 = 2$；若 $k = 3$，则小 R 可以选择区间 $[1, 2]$ 和区间 $[4, 4]$，权值分别为 $1 \oplus 2 = 3$ 和 $3$。
+
+\subsection*{输入输出格式}
+\textbf{输入：}第一行，两个非负整数 $n, k$，分别表示序列长度和给定的非负整数。\par
+\qquad\quad 第二行，$n$ 个非负整数 $a_1, a_2, \dots, a_n$，表示小 R 的序列。\par
+\textbf{输出：}一行一个非负整数，表示能选出的不相交区间数量的最大值。
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|X|X|}
+\hline
+\textbf{输入示例} & \textbf{输出示例}     \\    
+\hline
+4 2 & 2   \\ 
+2 1 0 3 & \\ 
+\hline
+4 3 & 2   \\ 
+2 1 0 3 & \\ 
+\hline
+4 0 & 1   \\ 
+2 1 0 3 & \\ 
+\hline
+\end{tabularx}  
+\end{table}
+
+\subsection*{样例解释}
+\textbf{样例1：}可以选择区间 $[1, 1]$ 和区间 $[2, 4]$，异或和分别为 $2$ 和 $1 \oplus 0 \oplus 3 = 2$，且两个区间不相交。
+
+\textbf{样例2：}可以选择区间 $[1, 2]$ 和区间 $[4, 4]$，异或和分别为 $1 \oplus 2 = 3$ 和 $3$，且两个区间不相交。
+
+\textbf{样例3：}可以选择区间 $[3, 3]$，异或和为 $0$。不能同时选择区间 $[3, 3]$ 和区间 $[1, 4]$，因为这两个区间相交。
+
+\subsection*{算法分析}
+\begin{enumerate}
+\item \textcolor{important}{\textbf{前缀异或性质}}\\
+定义 $pre[i]$ 为序列前 $i$ 个元素的异或和（即 $a_1 \oplus a_2 \oplus \dots \oplus a_i$），规定 $pre[0] = 0$。
+根据异或的性质，任意区间 $[l, r]$ 的异或和可以表示为：
+$$a_l \oplus \dots \oplus a_r = pre[r] \oplus pre[l-1]$$
+题目要求区间异或和为 $k$，即 $pre[r] \oplus pre[l-1] = k$，移项得：
+\textcolor{important}{$$pre[l-1] = pre[r] \oplus k$$}
+
+\item \textcolor{important}{\textbf{动态规划状态定义}}\\
+设 $dp[i]$ 表示在序列的前 $i$ 个数中，能够选出的满足条件的不相交区间的\textbf{最大数量}。
+
+\item \textcolor{important}{\textbf{状态转移方程}}\\
+对于当前位置 $i$，我们有两种选择策略：
+\begin{enumerate}
+    \item \textbf{不以 $i$ 作为区间的结尾}：此时最大数量继承自前一个位置，即 $dp[i] = dp[i-1]$。
+    \item \textbf{寻找一个区间以 $i$ 结尾}：我们需要找到一个下标 $j$ ($0 \le j < i$)，使得区间 $[j+1, i]$ 的异或和为 $k$。
+    \begin{itemize}
+        \item 由前缀异或性质可知，需要满足 $pre[j] = pre[i] \oplus k$。
+        \item 如果存在这样的 $j$，则可以转移：$dp[i] = \max(dp[i], dp[j] + 1)$。
+    \end{itemize}
+\end{enumerate}
+综上，状态转移方程为：
+$$dp[i] = \max(dp[i-1], \max_{j \text{ satisfying condition}} (dp[j] + 1))$$
+
+\item \textcolor{important}{\textbf{哈希表优化}}\\
+为了快速找到满足 $pre[j] = pre[i] \oplus k$ 
+的最佳下标 $j$，我们使用哈希表 map$<$int, int$>$
+
+\begin{itemize}
+    \item \textbf{键 (Key)}：前缀异或值 $val$。
+    \item \textbf{值 (Value)}：该前缀异或值对应的下标 $j$。
+    \item \textbf{贪心更新策略}：为了保证 $dp[i]$ 最大，我们在哈希表中记录该前缀异或值出现时对应的\textbf{最大 $dp$ 值}的下标。即：当计算出新的 $dp[i]$ 后，如果它比之前记录的同前缀异或值的 $dp$ 结果更优，才更新哈希表。
+\end{itemize}
+
+\end{enumerate}
+
+\subsection*{参考代码}
+\begin{lstlisting}
+#include "bits/stdc++.h"
+using namespace std;
+
+using u32 = unsigned;
+using i32 = int;
+using u64 = unsigned long long;
+using i64 = long long;
+using u128 = unsigned __int128;
+using i128 = __int128;
+
+#define int long long
+#define endl "\n"
+
+constexpr i64 inf = 1e18;
+
+void slu() {
+    int n, k;
+    cin >> n >> k;
+    vector<int> a(n);
+    for (auto &x : a) cin >> x;
+    vector<int> pre(n + 1, 0);
+    map<int, int> mp;
+    vector<int> dp(n + 1, 0);
+    for (int i = 1; i <= n; i++) {
+        pre[i] = pre[i - 1] ^ a[i - 1];
+    }
+
+    mp[0] = 0;
+    for (int i = 1; i <= n; i++) {
+        int l = pre[i] ^ k;
+        dp[i] = dp[i - 1];
+        if (mp.contains(l)) {
+            dp[i] = max(dp[i], dp[mp[l]] + 1);
+        }
+        if (dp[i] > dp[mp[pre[i]]]) {
+            mp[pre[i]] = i;
+        }
+    }
+    cout << dp[n];
+}
+
+signed main() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr);
+    cout.tie(nullptr);
+
+    int t = 1;
+    // cin >> t;
+
+    while (t--) slu();
+    return 0;
+}
+
+\end{lstlisting}
+
+\subsection*{拓展思考}
+\begin{itemize}
+    \item \textcolor{important}{\textbf{优化空间}}：可以使用 \texttt{unordered\_map} 替代 \texttt{map}，将单次查找的时间复杂度从 $O(\log n)$ 优化到期望 $O(1)$，从而将总时间复杂度优化到 $O(n)$。
+\end{itemize}
+
+\end{document}
+% 主文件读取到这里就会停止

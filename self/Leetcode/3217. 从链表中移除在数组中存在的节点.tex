@@ -1,0 +1,124 @@
+\documentclass{ctexart}
+\ctexset{
+    section = {
+        titleformat = \raggedright,
+        name = {,、},
+        number = \chinese{section}
+    }
+}
+
+\usepackage[a4paper,top=2.54cm,bottom=2.54cm,left=3.18cm,right=3.18cm]{geometry}
+\usepackage{eso-pic,graphicx}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{pifont}  
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\definecolor{highlightpink}{RGB}{255,0,180}  % 粉红色
+\definecolor{codebg}{RGB}{245,245,245}       % 代码背景色
+\definecolor{lightgray}{gray}{0.8}           % 浅灰色（替代gray!20）
+\definecolor{commentcolor}{RGB}{0,128,0}     % 注释颜色（深绿色）
+\definecolor{highlight1}{RGB}{255,50,50}     % 红色高亮
+\definecolor{highlight2}{RGB}{0,100,200}     % 蓝色高亮
+\definecolor{highlight3}{RGB}{150,0,150}     % 紫色高亮
+
+% 设置超链接样式
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+    pdftitle={LeetCode 3217 题解},
+    pdfauthor={Feijoa_Li}
+}
+
+% 设置 listings 样式
+\lstset{
+basicstyle=\ttfamily\small,
+language=C++,
+frame=single,
+breaklines=true,
+backgroundcolor=\color{codebg},
+escapeinside=``,
+commentstyle=\color{commentcolor},
+keywordstyle=\color{blue},
+stringstyle=\color{red},
+rulecolor=\color{black},
+framesep=5pt,
+xleftmargin=10pt,
+xrightmargin=10pt
+}
+
+\title{\href{https://leetcode.cn/problems/delete-nodes-from-linked-list-present-in-array/}{LeetCode 3217. 从链表中移除在数组中存在的节点}}
+\author{Feijoa\_Li}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{题目描述}
+给定一个整数数组 \texttt{nums} 和一个链表的头节点 \texttt{head}。从链表中移除所有存在于 \texttt{nums} 中的节点后，返回修改后的链表的头节点。
+
+\section{解题思路}
+本题要求从链表中删除所有在给定数组 \texttt{nums} 中出现的节点。由于链表的删除操作需要知道前驱节点，因此我们需要维护前驱指针。
+
+\textcolor{highlight1}{\textbf{核心思路：}}
+\begin{itemize}
+    \item \textcolor{highlight2}{预处理数组：} 将数组 \texttt{nums} 排序，以便使用二分查找快速判断节点值是否在数组中
+    \item \textcolor{highlight2}{处理头节点：} 如果头节点的值在数组中，需要不断移动头指针，直到找到第一个不在数组中的节点
+    \item \textcolor{highlight2}{遍历链表：} 使用两个指针 \texttt{cur} 和 \texttt{nxt} 遍历链表，
+    当 \texttt{nxt} 节点的值在数组中时，跳过该节点(也就是将 $cur->next$ 指向 $nxt->next$).
+\end{itemize}
+
+\textcolor{highlight1}{\textbf{算法步骤：}}
+\begin{enumerate}
+    \item 对数组 \texttt{nums} 进行排序
+    \item 定义二分查找函数判断值是否在数组中
+    \item 处理头节点，确保头节点不在删除列表中
+    \item 使用双指针遍历链表，删除需要移除的节点
+\end{enumerate}
+\newpage
+\section{代码实现}
+\begin{lstlisting}[language=C++]
+sort(nums.begin(), nums.end());
+auto ok = [&](int x) {
+    auto it = lower_bound(nums.begin(), nums.end(), x);
+    if (it != nums.end() && *it == x)
+        return true;
+    return false;
+};
+
+while (ok(head->val)) {
+    head = head->next;
+}
+
+auto cur = head;
+auto nxt = head->next;
+
+while (nxt != nullptr) {
+    if (ok(nxt->val)) {
+        cur->next = nxt->next;
+    } else {
+        cur = cur->next;
+    }
+    nxt = cur->next;
+}
+\end{lstlisting}
+
+\section{复杂度分析}
+\begin{itemize}
+    \item \textbf{时间复杂度:} $O(n \log n + m \log n)$，其中 $n$ 是数组 \texttt{nums} 的长度，$m$ 是链表的长度。排序需要 $O(n \log n)$，每个节点的二分查找需要 $O(\log n)$。
+    \item \textbf{空间复杂度:} $O(1)$，除了排序使用的栈空间外，只使用了常数额外空间。
+\end{itemize}
+
+\end{document}

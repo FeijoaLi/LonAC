@@ -1,0 +1,105 @@
+\documentclass{ctexart}
+\ctexset{
+    section = {
+        titleformat = \raggedright,
+        name = {,、},
+        number = \chinese{section}
+    }
+}
+
+\usepackage[a4paper,top=2.54cm,bottom=2.54cm,left=3.18cm,right=3.18cm]{geometry}
+\usepackage{eso-pic,graphicx}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{pifont}  
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\definecolor{highlightpink}{RGB}{255,0,180}  % 粉红色
+\definecolor{codebg}{RGB}{245,245,245}       % 代码背景色
+\definecolor{lightgray}{gray}{0.8}           % 浅灰色（替代gray!20）
+\definecolor{commentcolor}{RGB}{0,128,0}     % 注释颜色（深绿色）
+\definecolor{highlight1}{RGB}{255,50,50}     % 红色高亮
+\definecolor{highlight2}{RGB}{0,100,200}     % 蓝色高亮
+\definecolor{highlight3}{RGB}{150,0,150}     % 紫色高亮
+
+% 设置超链接样式
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+    pdftitle={LeetCode 3289 题解},
+    pdfauthor={Feijoa_Li}
+}
+
+% 设置 listings 样式
+\lstset{
+basicstyle=\ttfamily\small,
+language=C++,
+frame=single,
+breaklines=true,
+backgroundcolor=\color{codebg},
+escapeinside=``,
+commentstyle=\color{commentcolor},
+keywordstyle=\color{blue},
+stringstyle=\color{red},
+rulecolor=\color{black},
+framesep=5pt,
+xleftmargin=10pt,
+xrightmargin=10pt
+}
+
+\title{\href{https://leetcode.cn/problems/the-two-sneaky-numbers-of-digitville/}{LeetCode 3289. 数字小镇中的捣蛋鬼}}
+\author{Feijoa\_Li}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{题目描述}
+数字小镇 Digitville 中，存在一个数字列表 \texttt{nums}，其中包含从 0 到 n - 1 的整数。每个数字本应只出现一次，然而，有两个顽皮的数字额外多出现了一次，使得列表变得比正常情况下更长。
+
+为了恢复 Digitville 的和平，作为小镇中的名侦探，请你找出这两个顽皮的数字。
+
+返回一个长度为 2 的数组，包含这两个数字（顺序任意）。
+
+\section{解题思路}
+本题可以使用哈希表（字典）来统计每个数字出现的次数。由于题目保证恰好包含两个重复的元素，我们只需要：
+\begin{enumerate}
+    \item 遍历整个数组，使用哈希表记录每个数字出现的次数
+    \item 再次遍历哈希表，找出出现次数大于1的两个数字
+    \item 将这两个数字放入结果数组中返回
+\end{enumerate}
+
+
+
+\section{代码实现}
+\begin{lstlisting}[language=C++]
+class Solution {
+public:
+    vector<int> getSneakyNumbers(vector<int>& nums) {
+        map<int, int> mp;
+        `\textcolor{highlight1}{// 统计每个数字出现的次数}`
+        for (auto x : nums) mp[x]++;
+        
+        vector<int> res;
+        `\textcolor{highlight1}{// 找出出现次数大于1的数字}`
+        for (auto [x, cnt] : mp) {
+            if (cnt > 1) res.push_back(x);
+        }
+        return res;
+    }
+};
+\end{lstlisting}
+
+\end{document}

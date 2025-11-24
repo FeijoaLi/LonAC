@@ -1,0 +1,175 @@
+% L1212 : 汉明距离
+\documentclass{ctexart}
+\ctexset{
+    section = {
+        titleformat = \raggedright,
+        name = {,、},
+        number = \chinese{section}
+    }
+}
+\usepackage[a4paper,top=2.54cm,bottom=2.54cm,left=3.18cm,right=3.18cm]{geometry}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{pifont}  
+\usepackage{xcolor}
+\usepackage{listings}
+
+\definecolor{lightpink}{RGB}{184,83,182}
+\definecolor{codebg}{RGB}{245,245,245}
+
+% 正确设置 listings
+\lstset{
+    basicstyle=\ttfamily\small,
+    language=C++,
+    frame=single,
+    breaklines=true,
+    backgroundcolor=\color{codebg},
+    escapeinside=``,
+    commentstyle=\color{gray},
+    rulecolor=\color{black},
+    framesep=5pt,
+    xleftmargin=10pt,
+    xrightmargin=10pt
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{解码未来AI教育 \quad 编程题解}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\labelenumii}{\Alph{enumii}.}
+
+\begin{document}
+
+\section*{L1212 : 汉明距离 \ding{78}} 
+
+\subsection*{题目描述}
+汉明距离是指\textcolor{lightpink}{\textbf{两个整数对应二进制位不同的数量}}。
+
+例如，如果 $x = 1$（二进制表示为 0001），$y = 4$（二进制表示为 0100），那么它们的汉明距离是 2。
+
+\subsection*{输入输出格式}
+\textbf{输入：}一行两个数 $x$ $y$，表示需要计算的两个整数。其中（$0 \leq x,y \leq 2^{30}$）\par
+\textbf{输出：}$x$ 和 $y$ 的汉明距离。
+
+
+\vspace{18pt}
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|X|X|}
+\hline
+\textbf{输入示例} & \textbf{输出示例}     \\    
+\hline
+1 4 & 2   \\ 
+\hline
+\end{tabularx}  
+\end{table}
+
+\subsection*{样例解释}
+\begin{center}
+$x = 1_{10} = 0001_2$ \\
+$y = 4_{10} = 0100_2$
+\end{center}
+
+在二进制下，$x$ 和 $y$ 的表示如下：
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{0.9\textwidth}{|X|X|X|X|}
+\hline
+\textbf{位数} & \textbf{x} & \textbf{y} & \textbf{是否相同} \\   
+\hline
+第1位 & 1 & 0 & \textcolor{red}{不同} \\
+\hline
+第2位 & 0 & 0 & \textcolor{green!60!black}{相同} \\
+\hline
+第3位 & 0 & 1 & \textcolor{red}{不同} \\
+\hline
+第4位 & 0 & 0 & \textcolor{green!60!black}{相同} \\
+\hline
+\end{tabularx}  
+\end{table}
+
+$x$ 和 $y$ 二进制下有两处不同，所以汉明距离为 2。
+
+\subsection*{背景知识}
+位运算是对整数在二进制表示下直接对位进行的操作：
+\begin{itemize}
+\item \textbf{按位与（\&）}：两位都为1时结果为1
+\item \textbf{按位或（$|$）}：两位至少有一个为1时结果为1  
+\item \textbf{按位异或（\^{} / $\oplus$）}：两位不同时结果为1，相同时结果为0
+\item \textbf{左移（$<<$）}：将所有位向左移动，右边补0
+\item \textbf{右移（$>>$）}：将所有位向右移动，左边补0
+\end{itemize}
+
+\subsection*{算法分析 : 使用位运算计算汉明距离}
+\begin{enumerate}
+\item \textbf{使用异或运算找出不同位}\\
+使用\textcolor{lightpink}{异或（$\oplus$）}运算的特性：相同为0，不同为1\\
+计算 $x \oplus y$，使得 $x$ 和 $y$ 不同的部分标记为1，相同的部分标记为0。
+\begin{lstlisting}
+int t = x ^ y; `// 计算异或结果`
+\end{lstlisting}
+
+\item \textbf{使用与运算检查最后一位}\\
+使用 \textcolor{lightpink}{\&} 运算判断最后一位是否为1：\\
+对于 $( t \hspace{4pt} \& \hspace{4pt} 1 )$，如果值为1，则说明二进制下的 $t$ 在最后一位是1（因为只有 1\&1 = 1）。\\
+如果值为0，则说明二进制下的 $t$ 在最后一位是0。
+\begin{lstlisting}
+cnt += t & 1; `// 检查最后一位是否为1`
+\end{lstlisting}
+
+\item \textbf{使用右移运算逐位处理}\\
+使用\textcolor{lightpink}{右移（$>>$）}运算逐位统计1的个数：\\
+通过循环处理最后一位，如果是1（意味着此处 $x$ 和 $y$ 不同）则计数器加1，\\
+然后将数字右移一位，直到数字变为0。
+\end{enumerate}
+
+\vspace{15pt}
+
+\noindent\textbf{\large 示例：计算 $x=1$, $y=4$ 的汉明距离}
+\begin{itemize}
+\item \textbf{计算 $x \oplus y$}：
+\begin{center}
+$x = 1_{10} = 0001_2$ \\
+$y = 4_{10} = 0100_2$ \\
+$x \oplus y = 0101_2$
+\end{center}
+
+\item \textbf{统计 $x \oplus y$ 中1的个数}：
+\vspace{10pt}
+\begin{table}[h]
+\centering
+\begin{tabularx}{0.95\textwidth}{|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|}
+\hline
+\textbf{当前目标值} & \textbf{最后一位数值} & \textbf{计数器数值} \\    
+\hline 
+0101 & 1（\textcolor{red}{$x$ 和 $y$ 不同}） & 1 \\ 
+\hline
+010 & 0（\textcolor{green!60!black}{$x$ 和 $y$ 相同}） & 1 \\ 
+\hline
+01 & 1（\textcolor{red}{$x$ 和 $y$ 不同}） & 2 \\ 
+\hline
+0 & 0（\textcolor{green!60!black}{$x$ 和 $y$ 相同}） & 2 \\ 
+\hline
+\end{tabularx}  
+\end{table}
+\end{itemize}
+
+\subsection*{核心代码总览}
+\begin{lstlisting}
+int t = x ^ y; `// 计算异或结果`
+int cnt = 0;   `//  计数器`
+while (t) {    `// 当目标值为0时终止`
+    cnt += t & 1; `// 检查最后一位是否为1`
+    t >>= 1;      `// 右移一位`
+}
+\end{lstlisting}
+
+\end{document}

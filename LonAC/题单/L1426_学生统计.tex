@@ -1,0 +1,195 @@
+%L1056 : 学生统计
+\documentclass{ctexart}
+\ctexset{
+    section = {
+        titleformat = \raggedright,
+        name = {,、},
+        number = \chinese{section}
+    }
+}
+\usepackage[a4paper,top=2.54cm,bottom=2.54cm,left=3.18cm,right=3.18cm]{geometry}
+\usepackage{eso-pic,graphicx}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{pifont}  
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{highlightpink}{RGB}{255,0,180}  % 粉红色
+\definecolor{codebg}{RGB}{245,245,245}       % 代码背景色
+\definecolor{lightgray}{gray}{0.8}           % 浅灰色（替代gray!20）
+\definecolor{commentcolor}{RGB}{0,128,0}     % 注释颜色（深绿色）
+
+% 设置 listings 样式
+\lstset{
+basicstyle=\ttfamily\small,
+language=C++,
+frame=single,
+breaklines=true,
+backgroundcolor=\color{codebg},
+escapeinside=``,
+commentstyle=\color{commentcolor},
+keywordstyle=\color{blue},
+stringstyle=\color{red},
+rulecolor=\color{black},
+framesep=5pt,
+xleftmargin=10pt,
+xrightmargin=10pt
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{解码未来AI教育 \quad 编程题解}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\labelenumii}{\Alph{enumii}.}
+
+\begin{document}
+
+\section*{L1426 学生统计 \ding{78}\ding{78}} 
+
+\subsection*{题目描述}
+快开学了，小徐同学想帮老师统计一下本学期学校的学生信息。
+
+老师给了一张学生信息表，每一条数据包括学生姓名、年级、班级。
+
+老师想知道本学期每个年级有多少个班以及多少个人。
+
+\subsection*{输入输出格式}
+\textbf{输入：}第一行，一个整数 $N$，表示有 $N$ 条数据；  
+接下来 $N$ 行，每行包含三个字符串，分别表示姓名、年级、班级。  
+
+\textbf{输出：}按年级从小到大，输出年级的班级数和总人数。  
+（注意，年级、班级总数、年级总数之间有一个空格，每行末尾不要有空格）
+
+\vspace{12pt}
+\begin{table}[h]
+\centering
+\begin{tabularx}{0.85\textwidth}{|X|X|}
+\hline
+\textbf{输入示例} & \textbf{输出示例}     \\    
+\hline
+5 & G7 2 3   \\ 
+Tom G7 A & G8 1 2   \\ 
+Jerry G7 B & \\ 
+Llice G7 A & \\ 
+Bob G8 A & \\ 
+Apple G8 A & \\ 
+\hline
+\end{tabularx}  
+\end{table}
+
+\subsection*{样例解释}
+\begin{table}[h]
+\centering
+\begin{tabularx}{0.95\textwidth}{|c|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|}
+\hline
+\textbf{年级} & \textbf{班级列表} & \textbf{班级数} & \textbf{学生人数} \\ 
+\hline
+G7 & A班：Tom、Llice \quad B班：Jerry & 2 & 3 \\ 
+\hline
+G8 & A班：Bob、Apple & 1 & 2 \\ 
+\hline
+\end{tabularx}  
+\end{table}
+
+\subsection*{算法分析}
+\begin{enumerate}
+\item \textbf{问题分析} \\ 
+需要统计\textcolor{highlightpink}{每个年级的班级数}和\textcolor{highlightpink}{学生总数}。
+同一个年级的不同班级需要去重统计，而同一个年级的学生人数直接累加。
+
+\item \textbf{算法选择}
+\begin{enumerate}
+\item \textbf{解法一 - 排序 + 遍历统计 : }  
+先将所有学生信息按\textcolor{highlightpink}{年级}和
+\textcolor{highlightpink}{班级}排序，
+将年级小的放在前面，年级相同的按照班级排序，
+然后遍历统计每个年级的信息。
+
+\item \textbf{解法二 - Map/Set 统计 : }  
+使用 \texttt{map} 和 \texttt{set} 容器自动维护有序性和去重特性，将年级作为键，班级,学生人数作为值
+\end{enumerate}
+
+\item \textbf{实现思路}
+\begin{itemize}
+    \item \textbf{法一：结构体排序 + 遍历统计}
+    \begin{enumerate}
+\setlength{\itemsep}{1pt}
+\setlength{\parskip}{0pt}
+\item 定义结构体存储学生信息（姓名、年级、班级）
+\begin{lstlisting}[language=C++]
+struct Node {
+    string g;`年级`
+    string c;`班级数`
+    string n;`总人数`
+};
+
+bool cmp(Node a, Node b) {
+    if (a.g == b.g) return a.c < b.c;
+    return a.g < b.g;
+}
+\end{lstlisting}
+\item 按\textcolor{blue}{年级升序、班级升序}排序
+\item 遍历排序后的数据，统计每个年级的班级数和学生数
+\begin{lstlisting}[language=C++]
+if (g != a[i].g) { `枚举到了新的年级`
+    cout << g << "` `" << cnt_class << "` `" 
+         << cnt_stu << endl;
+    g = a[i].g, c = a[i].c;
+    cnt_class = 1, cnt_stu = 0;`数据清零`
+}
+cnt_stu++;`总人数加1`
+if (c != a[i].c) {`遇到新的班级，班级数加1`
+    c = a[i].c;
+    cnt_class++;
+}
+\end{lstlisting}
+\end{enumerate}
+
+
+\item \textbf{法二：map + set 统计}
+\begin{enumerate}
+\item 使用 \texttt{map<string, int>} 统计每个年级的学生总数
+\begin{lstlisting}[language=C++]
+map<string, int> s;` // 年级 -> 学生数`
+s[grade]++;
+\end{lstlisting}
+
+\item 使用 \texttt{map<string, set<string>>} 统计每个年级的班级集合（自动去重）
+\begin{lstlisting}[language=C++]
+map<string, set<string>> c;`// 年级 -> 班级集合`
+c[grade].insert(clazz);
+\end{lstlisting}
+
+\item 遍历 \texttt{map} 输出结果
+\begin{lstlisting}[language=C++]
+for (auto i : s) {
+    cout << i.first << "` `" << c[i.first].size() << "` `" 
+         << i.second << endl;
+}
+\end{lstlisting}
+
+
+\end{enumerate}
+\end{itemize}
+
+\end{enumerate}
+
+
+
+
+\subsection*{拓展思考}
+\begin{itemize}
+\item 如果要求按\textcolor{highlightpink}{班级数从大到小}输出，该如何修改？
+\item 如果数据中存在重复记录（相同姓名、年级、班级），该如何去重？
+\end{itemize}
+\newpage
+
+\end{document}

@@ -1,0 +1,181 @@
+\documentclass{ctexart}
+\ctexset{
+    section = {
+        titleformat = \raggedright,
+        name = {,、},
+        number = \chinese{section}
+    }
+}
+\usepackage[a4paper,top=2.54cm,bottom=2.54cm,left=3.18cm,right=3.18cm]{geometry}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{pifont}  
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+
+\definecolor{lightpink}{RGB}{184,83,182}
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{emphcolor}{RGB}{199,21,133}
+\definecolor{important}{RGB}{220,20,60}
+\definecolor{highlight}{RGB}{0,100,0}
+\definecolor{sumregion}{RGB}{255,200,200}
+\definecolor{currentcell}{RGB}{255,0,0}
+
+\lstset{
+basicstyle=\ttfamily\small,
+language=C++,
+frame=single,
+breaklines=true,
+backgroundcolor=\color{codebg},
+escapeinside=``,
+commentstyle=\color{green!60!black},
+keywordstyle=\color{blue},
+stringstyle=\color{red},
+rulecolor=\color{black},
+framesep=5pt,
+xleftmargin=10pt,
+xrightmargin=10pt
+}
+
+\setlist[enumerate,1]{label=\arabic*., leftmargin=2em}
+\setlist[enumerate,2]{label=（\arabic*）, leftmargin=3em}
+\setlist[enumerate,3]{label=\roman*, leftmargin=4em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{解码未来AI教育 \quad 编程题解}
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+\section*{L1500 : 搜索2 \ding{78}\ding{78}\ding{78}} 
+
+\subsection*{题目描述}
+有一个奇怪的电梯，大楼有 $N$ 层楼，每层楼有一个数字 $K_i$（$0 \le K_i \le N$）。电梯只有四个按钮：开，关，上，下。上下的层数等于当前楼层上的那个数字。如果不能满足要求，相应的按钮就会失灵。
+
+例如：$3,3,1,2,5$ 代表了 $K_i$（$K_1=3$，$K_2=3$，……），从1楼开始。在1楼，按"上"可以到4楼，按"下"是不起作用的，因为没有-2楼。
+
+那么，从A楼到B楼至少要按几次按钮呢？
+
+\subsection*{输入输出格式}
+\textbf{输入：}第一行为三个用空格隔开的正整数，
+\par\qquad\quad 表示 $N, A, B$（$1 \le N \le 200$，$1 \le A, B \le N$）。\par
+\qquad\quad 第二行为 $N$ 个用空格隔开的非负整数，表示 $K_i$。\par
+\textbf{输出：}一行，即最少按键次数，若无法到达，则输出 $-1$。\par
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|X|X|}
+\hline
+\textbf{输入示例} & \textbf{输出示例}       \\      
+\hline
+5 1 5 & 3   \\   
+3 3 1 2 5 &   \\   
+\hline
+\end{tabularx}  
+\end{table}
+
+\subsection*{样例分析}
+以输入为例：
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+\node at (0,4) {楼层};
+\node at (0,3) {5};
+\node at (0,2) {4};
+\node at (0,1) {3};
+\node at (0,0) {2};
+\node at (0,-1) {1};
+
+\node at (2,4) {K值};
+\node at (2,3) {5};
+\node at (2,2) {2};
+\node at (2,1) {1};
+\node at (2,0) {3};
+\node at (2,-1) {3};
+\end{tikzpicture}
+\end{center}
+
+\textbf{最优路径：} \texttt{1 → 4 → 2 → 5}（3次按键）
+
+\begin{enumerate}
+\item \textcolor{blue}{\textbf{第一次按键}}：从1楼（$K_1=3$）按"上"到4楼
+\item \textcolor{green}{\textbf{第二次按键}}：从4楼（$K_4=2$）按"下"到2楼
+\item \textcolor{red}{\textbf{第三次按键}}：从2楼（$K_2=3$）按"上"到5楼（目标）
+\end{enumerate}
+
+
+
+\subsection*{算法分析}
+
+\begin{enumerate}
+\item \textcolor{highlight}{\textbf{问题分析}}  \\  
+这是一个典型的\textcolor{emphcolor}{\textbf{最短路径}}问题，可以使用\textcolor{emphcolor}{\textbf{广度优先搜索（BFS）}}来解决。每个楼层是一个状态，每次按按钮是状态转移。
+
+\item \textcolor{highlight}{\textbf{状态转移}}  \\  
+从当前楼层 $u$，可以转移到两个可能的楼层：
+\begin{itemize}
+\item 向上：$u + K[u]$（如果不超过 $N$）
+\item 向下：$u - K[u]$（如果不小于 $1$）
+\end{itemize}
+
+\item \textcolor{highlight}{\textbf{BFS算法步骤}}
+\begin{enumerate}
+\item 初始化距离数组，所有楼层设为-1（表示未访问）
+\item 将起始楼层加入队列，距离设为0
+\item BFS遍历：
+\begin{itemize}
+\item 从队列中取出当前楼层
+\item 如果到达目标楼层，返回当前距离
+\item 否则，尝试向上和向下移动
+\item 如果新楼层在范围内且未被访问，更新距离并入队
+\end{itemize}
+\end{enumerate}
+
+\item \textcolor{highlight}{\textbf{边界条件处理}}
+\begin{itemize}
+\item 向上移动：检查是否不超过 $N$
+\item 向下移动：检查是否不小于 $1$
+\item 如果起点和目标相同，直接返回0
+\end{itemize}
+
+\end{enumerate}
+
+\subsection*{代码实现}
+
+\begin{lstlisting}[language=C++]
+while (!q.empty()) {
+    int u = q.front();
+    if (u == y) {
+        cout << cost[u];
+        return;
+    }
+    q.pop();
+    for (int i = 0; i < 2; i++) {
+        int v = u + a[u][i];
+        if (v >= n || v < 0) continue;
+        if (cost[v] > cost[u] + 1) {
+            cost[v] = cost[u] + 1;
+            q.push(v);
+        }
+    }
+}
+\end{lstlisting}
+
+
+\subsection*{拓展思考}
+\begin{itemize}
+\item 如果电梯可以有多个按钮，每个按钮对应不同的移动距离，该如何解决？
+\item 如果每次移动的代价不同（比如上楼比下楼费更多能量），该如何修改算法？
+\item 如果要求输出具体的按键序列而不仅仅是最少次数，该如何实现？
+\end{itemize}
+
+\end{document}
