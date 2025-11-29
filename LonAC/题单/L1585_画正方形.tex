@@ -1,0 +1,149 @@
+\documentclass{ctexart} % 子文件也要声明类型
+
+% === 引入公共配置 ===
+% 这样单独编译时，它就有颜色和代码高亮了
+\usepackage{template} 
+
+\begin{document} 
+% 注意：主文件读取时，会忽略上面的所有内容，直接从这里开始读取
+
+\section*{\raggedright L1585 画正方形 \ding{78}} 
+
+\subsection*{题目描述}
+输入一个正整数 $n$，要求输出一个 $n$ 行 $n$ 列的正方形图案（参考样例输入输出）。图案由大写字母组成。
+其中，第 1 行以大写字母 A 开头，第 2 行以大写字母 B 开头，以此类推；在每行中，第 2 列为第 1 列的下一个字母，第 3 列为第 2 列的下一个字母，以此类推；特别的，规定大写字母 Z 的下一个字母为大写字母 A。
+
+\subsection*{输入输出格式}
+\textbf{输入：}输入一行，包含一个正整数 $n$。约定 $2 \le n \le 40$。
+
+\textbf{输出：}输出符合要求的正方形图案。
+
+\vspace{12pt}
+\begin{table}[h]
+\centering
+\begin{tabularx}{0.85\textwidth}{|X|X|}
+\hline
+\textbf{输入示例} & \textbf{输出示例}     \\    
+\hline
+3 & ABC \newline BCD \newline CDE   \\ 
+\hline
+\end{tabularx}  
+\end{table}
+
+\subsection*{样例解释}
+输入 $n=3$，需要输出 $3 \times 3$ 的矩阵。
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{0.95\textwidth}{|c|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|}
+\hline
+\textbf{行号} & \textbf{起始字母} & \textbf{该行内容} \\ 
+\hline
+第 1 行 & A (第0个字母) & A $\to$ B $\to$ C \\ 
+\hline
+第 2 行 & B (第1个字母) & B $\to$ C $\to$ D \\ 
+\hline
+第 3 行 & C (第2个字母) & C $\to$ D $\to$ E \\ 
+\hline
+\end{tabularx}  
+\end{table}
+
+\subsection*{算法分析}
+\begin{enumerate}
+\item \textbf{问题分析} \\ 
+我们需要打印一个二维矩阵。对于矩阵中的每一个位置 $(i, j)$，最核心的难点在于如何处理\textbf{“Z 的下一个是 A”}这一规则。
+
+\begin{itemize}
+    \item 我们可以将 A $\sim$ Z 映射为数字 $0 \sim 25$。
+    \item 这是一个典型的\textcolor{highlightpink}{循环队列}模型：当数字到达 25 (代表 Z) 时，再 $+1$ 应该回到 0 (代表 A)。
+    \item \textbf{取模运算 ($\%$)} 完美解决了这个问题。$x = (x + 1) \% 26$。
+\end{itemize}
+
+
+
+\item \textbf{算法选择}
+\begin{enumerate}
+\item \textbf{解法 - 模拟 : }  
+使用双重循环遍历行 $i$ 和列 $j$。
+对于第 $i$ 行，起始数值为 $i$。后续每往后一列，数值加 1。
+在输出时，通过模运算计算出对应的字母偏移量。
+\end{enumerate}
+
+\item \textbf{实现思路}
+\begin{itemize}
+    \item \textbf{核心逻辑}
+    \begin{enumerate}
+\setlength{\itemsep}{1pt}
+\setlength{\parskip}{0pt}
+\item \textbf{循环结构}：外层循环控制行（0 到 $n-1$），内层循环控制列（0 到 $n-1$）。
+\begin{lstlisting}[language=C++]
+for (int i = 0; i < n; i++) { ... }
+\end{lstlisting}
+
+\item \textbf{字符计算与取模原理}：
+假设当前我们应该输出第 $cur$ 个字母（0对应A, 1对应B...）：
+\begin{itemize}
+    \item 核心公式：\textcolor{blue}{$(cur \% 26)$}
+    \item 如下图所示，当 $cur$ 增加到 26 时，取模结果自动变回 0（A）。
+    \item \vspace{10pt}
+\begin{center}
+\begin{tikzpicture}[scale=0.9]
+    \def \radius {2.2cm}
+    % 定义节点样式
+    \tikzstyle{node_style} = [circle, draw=black, thick, minimum size=0.8cm, fill=white]
+    \tikzstyle{highlight_style} = [circle, draw=red, thick, minimum size=0.8cm, fill=highlightpink!10]
+
+    % 绘制圆环
+    \draw [dashed, gray] (0,0) circle (\radius);
+
+    % 绘制节点
+    \node[node_style] (A) at (90:\radius) {\textbf{A}};
+    \node[above] at (A.north) {\small 0};
+
+    \node[node_style] (B) at (50:\radius) {B};
+    \node[right] at (B.east) {\small 1};
+
+    \node[node_style] (C) at (10:\radius) {C};
+    \node[right] at (C.east) {\small 2};
+
+    \node[node_style] (Y) at (170:\radius) {Y};
+    \node[left] at (Y.west) {\small 24};
+
+    \node[highlight_style] (Z) at (130:\radius) {\textbf{Z}};
+    \node[left] at (Z.west) {\small 25};
+
+    % 绘制箭头
+    \draw[->, thick, >=stealth] (A) to[bend left=20] (B);
+    \draw[->, thick, >=stealth] (B) to[bend left=20] (C);
+    \draw[->, thick, >=stealth] (Y) to[bend left=20] (Z);
+    
+    % 关键的 Z->A 箭头
+    \draw[->, ultra thick, red, >=stealth] (Z) to[bend left=20] node[midway, below, font=\small, yshift=-5pt] {} (A);
+
+    \node at (0,0) [align=center, font=\small\color{gray}] {字母表\\循环示意图};
+\end{tikzpicture}
+\end{center}
+
+\end{itemize}
+最后加上字符 $A$ 即可还原为大写字母。
+\begin{lstlisting}[language=C++]
+int cur = i; // `当前行从第 i 个字母开始`
+for (int j = 0; j < n; j++) {
+    // `先对26取余，确保数值限制在0-25之间，再转换为字母`
+    std::cout << (char)((cur++ % 26) + 'A');
+}
+std::cout << '\n'; // `每行结束后换行`
+\end{lstlisting}
+\end{enumerate}
+\end{itemize}
+\end{enumerate}
+
+\subsection*{拓展思考}
+\begin{itemize}
+\item 如何只输出正方形的\textcolor{highlightpink}{外框}（即第一行、最后一行、第一列、最后一列）？
+\item 如果规则改为：Z $\to$ Y $\to \dots \to$ B $\to$ A $\to$ Z （逆序）。该做哪些修改？
+\end{itemize}
+
+\newpage
+
+\end{document}

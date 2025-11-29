@@ -1,0 +1,169 @@
+\documentclass{ctexart} % 子文件也要声明类型
+
+% === 引入公共配置 ===
+% 这样单独编译时，它就有颜色和代码高亮了
+\usepackage{template} 
+
+\begin{document} 
+% 注意：主文件读取时，会忽略上面的所有内容，直接从这里开始读取
+
+\section*{\raggedright L1483 A-B 数对 \ding{78}\ding{78}} 
+
+\subsection*{题目描述}
+给出一串正整数数列以及一个正整数 $C$，要求计算出所有满足 $A - B = C$ 的数对 $(A, B)$ 的个数。
+
+注意：不同位置的数字如果数值相同，算作不同的数对。
+
+\subsection*{输入输出格式}
+\textbf{输入：}第一行包含两个正整数 $N$ 和 $C$（$1 \le N \le 2 \times 10^5$, $1 \le C < 2^{30}$）。
+第二行包含 $N$ 个正整数，表示数列中的元素（数值 $< 2^{30}$）。
+
+\textbf{输出：}输出一个整数，表示满足条件的数对个数。
+
+\vspace{12pt}
+\begin{table}[h]
+\centering
+\begin{tabularx}{0.85\textwidth}{|X|X|}
+\hline
+\textbf{输入示例} & \textbf{输出示例}     \\    
+\hline
+4 1 & 3   \\ 
+1 1 2 3 &   \\ 
+\hline
+\end{tabularx}  
+\end{table}
+
+\subsection*{样例解释}
+输入的数列为 $\{1, 1, 2, 3\}$，目标差值 $C=1$。
+我们需要寻找满足 $A - B = 1$ 的数对。满足条件的数对共有以下 3 对：
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{0.9\textwidth}{|c|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|}
+\hline
+\textbf{序号} & \textbf{数对 $(A, B)$} & \textbf{详细说明} \\ 
+\hline
+1 & $(2, 1)$ & 数组中\textbf{第3个}元素和\textbf{第1个}元素 \\ 
+\hline
+2 & $(2, 1)$ & 数组中\textbf{第3个}元素和\textbf{第2个}元素 \\ 
+\hline
+3 & $(3, 2)$ & 数组中\textbf{第4个}元素和\textbf{第3个}元素 \\ 
+\hline
+\end{tabularx}  
+\end{table}
+
+\noindent \small *注：虽然第1和第2组数对的数值看起来一样，但因为 $B$ 分别对应了数组中\textbf{不同下标位置}的元素，所以算作两个不同的答案。
+
+\subsection*{算法分析}
+\begin{enumerate}
+\item \textbf{问题分析} \\ 
+题目要求统计满足 $A - B = C$ 的数对。
+这个等式可以变换为 $B = A - C$。
+这意味着，对于数列中的每一个数，如果我们把它当作 $A$，那么我们只需要去查找数列中有多少个数值等于 $A - C$ 的数即可。
+
+\item \textbf{算法选择}
+\begin{enumerate}
+\item \textbf{解法一 - 暴力枚举 (TLE) : }  
+使用双重循环枚举所有的 $A$ 和 $B$，判断差值是否为 $C$。
+复杂度为 $O(N^2)$。由于 $N$ 最大可达 $2 \times 10^5$，计算量高达 $4 \times 10^{10}$，显然会超时。
+
+\item \textbf{解法二 - Map 统计 : }  
+利用 \texttt{std::map} 记录每个数字出现的次数。然后遍历每个 A，使用map获取
+B = A − C 在数组中的数量。时间复杂度 $O(N \log N)$。
+
+\item \textbf{解法三 - 排序 + 二分查找 : }  
+先将数组排序，然后对于每个 $A$，使用\textcolor{highlightpink}{二分查找}快速定位 $B = A - C$ 在数组中的数量。
+时间复杂度同样为 $O(N \log N)$，但不需要 Map 的额外空间开销，常数更小。
+\end{enumerate}
+
+\item \textbf{实现思路}
+\begin{itemize}
+    \item \textbf{思路一：Map 统计}
+    \begin{enumerate}
+    \setlength{\itemsep}{1pt}
+    \setlength{\parskip}{0pt}
+    \item 遍历数组，用 \texttt{map} 统计每个数出现的频率。
+    \begin{lstlisting}
+mp[a[i]]++;
+    \end{lstlisting}
+    \item 再次遍历，累加 `mp[a[i] - c]` 即为答案。
+    \begin{lstlisting}
+cnt += mp[a[i] - c];
+    \end{lstlisting}
+    \end{enumerate}
+
+    \item \textbf{思路二：排序 + 二分查找}
+    \begin{enumerate}
+\setlength{\itemsep}{1pt}
+\setlength{\parskip}{0pt}
+\item \textbf{排序}：
+首先对数组进行升序排序，这是二分查找的前提。
+\begin{lstlisting}[language=C++]
+std::sort(a.begin(), a.end()); // `先对数组进行排序`
+\end{lstlisting}
+
+\item \textbf{二分查找（图解）}：
+假设排序后的数组为 \texttt{\{1, 1, 2, 2, 2, 3\}}，我们要查找目标值 \textbf{2} 的数量。
+
+\begin{center}
+\begin{tikzpicture}[
+    cell/.style={rectangle, draw=black, minimum size=0.8cm, align=center},
+    highlight/.style={fill=highlightpink!20}
+]
+    % 绘制数组
+    \node[cell] (c0) at (0,0) {1};
+    \node[cell] (c1) at (0.8,0) {1};
+    \node[cell, highlight] (c2) at (1.6,0) {2};
+    \node[cell, highlight] (c3) at (2.4,0) {2};
+    \node[cell, highlight] (c4) at (3.2,0) {2};
+    \node[cell] (c5) at (4.0,0) {3};
+    
+    % 绘制指针
+    % lower_bound
+    \draw[->, thick, blue] (1.6, -1.0) -- (1.6, -0.45);
+    \node[blue, font=\small] at (1.6, -1.3) {lower\_bound (l)};
+    \node[blue, font=\footnotesize] at (1.6, -1.7) {第一个 $\ge 2$ 的位置};
+
+    % upper_bound
+    \draw[->, thick, red] (4.0, -1.0) -- (4.0, -0.45);
+    \node[red, font=\small] at (4.0, -1.3) {upper\_bound (r)};
+    \node[red, font=\footnotesize] at (4.0, -1.7) {第一个 $> 2$ 的位置};
+
+    % 绘制区间标识
+    \draw [decorate,decoration={brace,amplitude=5pt,raise=0ex}, thick]
+      (1.6, 0.5) -- (4.0, 0.5) node[midway,yshift=1.5em, font=\small] {数量 = $r - l = 3$};
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{5pt}
+\begin{itemize}
+    \item \texttt{lower\_bound}：指向第一个 \textbf{大于等于} 目标值的位置（开始位置）。
+    \item \texttt{upper\_bound}：指向第一个 \textbf{大于} 目标值的位置（结束位置的下一个）。
+    \item \textbf{目标数量} = \texttt{upper\_bound} 的下标 - \texttt{lower\_bound} 的下标。
+\end{itemize}
+
+\begin{lstlisting}[language=C++]
+auto l = std::lower_bound(a.begin(), a.end(), a[i] - c);
+auto r = std::upper_bound(a.begin(), a.end(), a[i] - c);
+cnt += r - l;
+\end{lstlisting}
+\end{enumerate}
+\end{itemize}
+
+\end{enumerate}
+
+\subsection*{拓展思考}
+\begin{enumerate}
+    \item \textbf{优化 - 双指针法 ($O(N)$)} \\
+    在解法三中，我们先排序再二分，总复杂度是 $O(N \log N)$。
+    \begin{itemize}
+        \item 思考一下：既然数组已经\textcolor{highlightpink}{有序}了，当我们枚举的 $A$ 增大时，对应的 $B$ ($= A-C$) 肯定也是单调递增的。
+        \item 是否可以使用两个指针（或三个指针，考虑到重复元素），只需遍历一遍数组就能统计出答案？这样可以将排序后的搜索过程降低到 $O(N)$。
+    \end{itemize}
+    \item \textbf{经典变式 - 两数之和 ($A + B = C$)} 
+    如果题目改为计算 $A + B = C$ 的数对个数,该做哪些修改
+\end{enumerate}
+\newpage
+
+\end{document}
