@@ -1,4 +1,4 @@
-\ProvidesPackage{my_style}
+\ProvidesPackage{template}
 
 % 1. 导入宏包
 \usepackage[colorlinks=false, linkcolor=blue, citecolor=blue, urlcolor=blue]{hyperref}
@@ -61,7 +61,7 @@
 \AddToShipoutPictureFG{%
   \AtPageCenter{%
     \begin{tikzpicture}[remember picture,overlay]
-      \node[opacity=0.1] at (0,0) {\includegraphics[width=0.9\paperwidth,height=0.5\paperheight,keepaspectratio]{sy.png}};
+      \node[opacity=0.1] at (0,0) {\includegraphics[width=0.9\paperwidth,height=0.5\paperheight,keepaspectratio]{watermark.png}};
     \end{tikzpicture}%
   }%
 }
