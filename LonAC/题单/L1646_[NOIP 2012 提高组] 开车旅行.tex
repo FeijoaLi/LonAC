@@ -158,14 +158,14 @@
     \Needspace{13\baselineskip}
     \begin{lstlisting}[language=C++]
     for (int i = n - 1; i >= 0; i--) {
-        vector<int> list;
+        vector<int> vec;
         auto it = st.lower_bound({h[i], i});
         auto tmp = it;
         
-        `// lambda: 将合法候选点加入 list`
+        `// lambda: 将合法候选点加入 vec`
         auto put = [&](array<int, 2> x) {
             if (x[1] == n) return;
-            list.push_back(x[1]);
+            vec.push_back(x[1]);
         };
         put(*tmp++); put(*tmp--); `// 检查后两个`
         put(*--tmp); put(*--tmp); `// 检查前两个`
@@ -176,15 +176,15 @@
     \Needspace{13\baselineskip}
     \begin{lstlisting}[language=C++]
         `// 排序：距离近优先，海拔低优先`
-        sort(list.begin(), list.end(), [&](int &a, int &b) {
+        sort(vec.begin(), vec.end(), [&](int &a, int &b) {
             int dis_a = get_dis(a, i);
             int dis_b = get_dis(b, i);
             if (dis_a == dis_b) return h[a] < h[b];
             return dis_a < dis_b;
         });
 
-        if (list.size() >= 2) nxt_a[i] = list[1]; `// A去第二近`
-        if (list.size() >= 1) nxt_b[i] = list[0]; `// B去最近`
+        if (vec.size() >= 2) nxt_a[i] = vec[1]; `// A去第二近`
+        if (vec.size() >= 1) nxt_b[i] = vec[0]; `// B去最近`
         st.insert({h[i], i});
     }
     \end{lstlisting}
