@@ -1,0 +1,140 @@
+\documentclass{ctexart}
+\usepackage{template} 
+\usepackage{float}
+\usepackage{needspace} 
+\usepackage{xcolor}
+
+\begin{document}
+
+\section*{\raggedright 英语课的单词接龙 \ding{78}\ding{78}}
+
+\subsection*{题目描述}
+
+英语老师为了活跃课堂气氛，组织大家玩单词接龙游戏。游戏规则如下：
+后一个单词的\textbf{\textcolor{blue}{首字母}}必须与前一个单词的\textbf{\textcolor{blue}{尾字母}}相同（\textbf{不区分大小写}，例如 \texttt{Dog} 后可以接 \texttt{Girl}）。 
+
+现老师记录了班长依次说出的 $N$ 个单词，请你编写程序判断该接龙序列是否合法。
+
+\subsection*{输入格式}
+
+第一行一个整数 $N$。
+
+接下来 $N$ 行，每行一个由英文字母组成的字符串。
+
+\subsection*{输出格式}
+
+如果全部符合规则，输出 \texttt{\textcolor{teal}{Valid}}。
+
+否则输出一个整数 \textcolor{red}{$X$}，表示第 $X$ 个单词出错了（从 $1$ 开始计数）。
+
+\subsection*{输入输出样例}
+
+% --- 表格 1 ---
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.2} 
+\setlength{\tabcolsep}{10pt}
+
+\begin{tabular}{|p{0.45\textwidth}|p{0.45\textwidth}|}
+\hline
+\textbf{输入 \#1} & \textbf{输出 \#1} \\
+\hline
+\begin{minipage}[t]{\linewidth}
+\begin{verbatim}
+4
+Apple
+Egg
+Good
+Day
+\end{verbatim}
+\end{minipage}
+\vspace{0.8em}
+& 
+\begin{minipage}[t]{\linewidth}
+\begin{verbatim}
+Valid
+\end{verbatim}
+\end{minipage} 
+\vspace{0.8em}
+\\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection*{算法分析}
+本题主要考察 \textbf{\textcolor{highlightpink}{字符串的基本操作}} 与 \textbf{\textcolor{highlightpink}{字符大小写转换}}。
+
+\begin{enumerate}
+\item \textbf{数据存储} \\ 
+由于题目需要输出出错单词的编号 $X$，我们可以使用 \texttt{string} 
+数组（或 \texttt{vector<string>}）来存储所有单词，
+下标建议从 $1$ 开始，方便直接对应题目要求的编号。
+
+\item \textbf{核心逻辑 (\textcolor{blue}{$O(N)$})} \\ 
+我们需要从第 $2$ 个单词开始遍历到第 $N$ 个单词。
+
+对于每一个单词 $s[i]$，检查首字母 $s[i][0]$ 
+是否与前一个单词 $s[i-1]$ 的尾字母匹配。
+\begin{itemize}
+    \item 获取前一个单词的尾字母：
+    可以使用 \texttt{s[i-1].back()} 或者 
+    \texttt{s[i-1][s[i-1].length()-1]}。
+    \item \textbf{忽略大小写}：
+    这是本题的易错点。'A' 和 'a' 在 ASCII 码中是不相等的。
+    比较时需要统一转换为大写或小写。
+\end{itemize}
+
+\item \textbf{字符处理：忽略大小写} \\ 
+题目要求不区分大小写，例如 'A' 和 'a' 应视为相同。我们可以将首尾字母统一转换为小写（或大写）后再进行比较。这里介绍两种常用方法：
+
+\begin{itemize}
+    \item \textbf{方法一：调用标准库函数（推荐）} \\
+    C++ 的 \texttt{<cctype>} 头文件提供了 \texttt{tolower(c)} 函数，可以将字符转换为小写（如果是符号或已经是小写，则保持不变）。
+    
+    \Needspace{10\baselineskip}
+    \begin{lstlisting}[language=C++]
+    #include <cctype> 
+    // ...
+    char head = tolower(s[i][0]);       `// 当前单词首字母转小写`
+    char tail = tolower(s[i-1].back()); `// 前一单词尾字母转小写`
+
+    if (head != tail) {
+        cout << i << endl; `// 发现不匹配，输出编号`
+        return 0;          `// 直接结束程序`
+    }
+    \end{lstlisting}
+
+    \item \textbf{方法二：利用 ASCII 码手动转换（底层原理）}  \\
+    在 ASCII 码表中，大写字母 \texttt{'A'} (65) 与小写字母 \texttt{'a'} (97) 之间相差 \textbf{32}。因此，判断一个字符如果在大写范围内（'A' $\sim$ 'Z'），只要加上 32 即可变为对应的小写字母。
+    
+    \Needspace{8\baselineskip}
+    \begin{lstlisting}[language=C++]
+    char head = s[i][0];
+    char tail = s[i-1].back();
+    
+    `// 手动转小写：如果是大写字母，加 32 变小写`
+    if (head >= 'A' && head <= 'Z') head += 32;
+    if (tail >= 'A' && tail <= 'Z') tail += 32;
+    
+    if (head != tail) {
+        cout << i << endl;
+        return 0;
+    }
+    \end{lstlisting}
+\end{itemize}
+
+\item \textbf{完整流程} \\ 
+如果循环结束后都没有触发 \texttt{return 0}，说明所有单词都符合规则，最后输出 \texttt{Valid}。
+
+\end{enumerate}
+
+\subsection*{拓展思考}
+\subsubsection*{进阶变式：最长单词接龙 (DFS/图论)}
+本题只是\textbf{验证}给定的序列是否合法。在竞赛（如 NOIP 2000 提高组）中，更经典的问题是：
+\begin{quote}
+    给出一堆单词，如果不规定顺序，问你能拼接出的\textbf{最长}接龙序列有多长？
+\end{quote}
+\textbf{思路}：
+这就从“模拟”变成了“搜索”。我们需要把每个单词看作图中的一个节点，如果单词 A 的尾部能接单词 B 的首部，就建立一条有向边（或在 DFS 中递归跳转）。由于可能存在环或者单词复用次数限制，通常使用 \textbf{\textcolor{purple}{深度优先搜索 (DFS)}} 来寻找最长路径。
+
+\end{document}

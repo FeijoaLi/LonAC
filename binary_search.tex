@@ -1,0 +1,753 @@
+\documentclass[12pt, a4paper]{ctexart}
+
+% --- 宏包加载 ---
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsfonts}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{mdframed}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+
+% --- 页面设置 ---
+\geometry{left=2.5cm, right=2.5cm, top=3cm, bottom=3cm}
+\hypersetup{
+    colorlinks=true, linkcolor=blue, urlcolor=cyan,
+}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{算法竞赛入门与进阶}
+\fancyhead[R]{二分算法：红蓝边界模型}
+\fancyfoot[C]{\thepage}
+
+% --- 自定义颜色 ---
+\definecolor{algored}{RGB}{230, 57, 70}
+\definecolor{algoblue}{RGB}{29, 53, 87}
+\definecolor{notegh}{RGB}{240, 240, 240}
+
+% --- 标题信息 ---
+\title{\textbf{\huge 告别死循环：二分算法的“红蓝区域法”}}
+\author{\Large 讲师：李俊飞 (Feijoa\_Li)}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+% --- 课程导读 ---
+\begin{tcolorbox}[colback=notegh, colframe=gray, title=\textbf{写在前面}]
+很多同学在写二分时，经常纠结这几个问题：
+\begin{itemize}
+    \item $mid$ 到底是加一还是减一？
+    \item 循环条件是 $l < r$ 还是 $l \le r$？
+    \item 最后的答案到底是 $l$ 还是 $r$？
+\end{itemize}
+今天我们要介绍的\textbf{“双开区间（红蓝区域）法”}，能够让你不再纠结这些细节，用一种极其直观的物理模型，一劳永逸地解决所有二分问题。
+\end{tcolorbox}
+
+\tableofcontents
+\newpage
+
+\section{二分算法核心：红蓝区域法与双开区间模型}
+
+本节将介绍一种在信奥竞赛中极其实用的二分思维模型。它抛弃了复杂的边界判断，将二分问题抽象为物理上的“领地夹逼”过程。
+
+\subsection{直观模型：红蓝颜色的对抗}
+
+在做二分题时，请摒弃“我在找数字 5”这种具体数值的思维，转而建立\textbf{“寻找性质分界线”}的全局观。
+
+假设我们面对一个有序序列或数轴区间。尽管未知具体的数值，但我们可以根据题目给出的判断条件（Check 函数），将整个定义域划分为两种颜色的领地：
+
+\begin{itemize}
+    \item \textbf{\textcolor{red}{红色区域 (Red)}}：左侧\textbf{不满足}条件的位置，视作红色（False/0）。
+    \item \textbf{\textcolor{blue}{蓝色区域 (Blue)}}：右侧\textbf{满足}条件的位置，视作蓝色（True/1）。
+\end{itemize}
+
+$$ \underbrace{\textcolor{red}{\blacksquare \ \blacksquare \ \blacksquare \ \dots \ \blacksquare}}_{\text{不满足条件 (Red)}} \quad \Big| \quad \underbrace{\textcolor{blue}{\blacksquare \ \blacksquare \ \dots \ \blacksquare \ \blacksquare}}_{\text{满足条件 (Blue)}} $$
+
+我们的任务变得非常单纯：\textbf{定位红蓝两种颜色交界的那条唯一“缝隙”。}
+
+\subsection{执行流程：双指针哨兵机制}
+
+为了精准捕获这条分界线，我们派出两名“哨兵”指针——$l$（红军大将）和 $r$（蓝军大将），采用\textbf{双开区间 $(l, r)$} 的策略进行搜索。
+
+\subsubsection*{1. 定义领地（初始化）}
+为了防止越界并覆盖所有可能解，初始化时指针不应站在具体的格子上，而应站在\textbf{数组范围之外}：
+\begin{itemize}
+    \item \textbf{$l$ (Left)}：初始位于第一个元素的\textbf{左侧}（虚拟下标 $-1$）。它承诺：\textit{“我所站立及我左侧的地方，全都是红色的。”}
+    \item \textbf{$r$ (Right)}：初始位于最后一个元素的\textbf{右侧}（虚拟下标 $N$）。它承诺：\textit{“我所站立及我右侧的地方，全都是蓝色的。”}
+\end{itemize}
+
+\subsubsection*{2. 领地扩张（迭代过程）}
+只要 $l$ 和 $r$ 之间还有未探索的未知区域（即 $l + 1 < r$），探索就继续：
+\begin{enumerate}
+    \item 计算中点 $mid$。
+    \item 派侦察兵查看 $mid$ 的颜色：
+    \begin{itemize}
+        \item 若 $mid$ 是\textbf{\textcolor{blue}{蓝色}}：说明 $mid$ 及其右侧皆为蓝军领地。于是 $r$ 左移至 $mid$ 处守卫新边界。
+        \item 若 $mid$ 是\textbf{\textcolor{red}{红色}}：说明 $mid$ 及其左侧皆为红军领地。于是 $l$ 右移至 $mid$ 处守卫新边界。
+    \end{itemize}
+\end{enumerate}
+\textbf{核心原则：} $l$ 永远只在红色区域移动，$r$ 永远只在蓝色区域移动，绝不越界。
+
+\subsubsection*{3. 完美的结局（循环终止）}
+当 $l$ 和 $r$ 终于紧挨在一起（即 $l + 1 == r$）时，循环结束。此时的状态是唯一且确定的：
+\begin{itemize}
+    \item $l$ 指向\textbf{最后一个红色元素}。
+    \item $r$ 指向\textbf{第一个蓝色元素}。
+    \item 分界线就在 $l$ 和 $r$ 之间。
+\end{itemize}
+
+\begin{center}
+    \fcolorbox{black}{gray!10}{
+    \parbox{0.9\linewidth}{
+    \centering
+    \textbf{【答案提取指南】}\\
+    题目问“最大的不满足数” $\rightarrow$ 输出 $l$\\
+    题目问“最小的满足数” $\rightarrow$ 输出 $r$\\
+    \textit{无需纠结 $mid \pm 1$，答案天然就在 $l$ 或 $r$ 手中。}
+    }
+    }
+\end{center}
+
+\subsection{数值细节：中点计算的避坑指南}
+
+在计算 $mid$ 时，教科书常见的 $(l+r)/2$ 写法存在隐患。建议养成使用\textbf{防溢出写法}的肌肉记忆。
+
+\begin{quote}
+    \textbf{推荐公式：} $mid = l + (r - l) / 2$
+\end{quote}
+\begin{enumerate}
+    \item \textbf{防止整型溢出 (Integer Overflow)}：
+    若 $l, r$ 均为接近 $2 \times 10^9$ 的大整数，直接相加会造成数据溢出（变为负数），导致程序崩溃。先减后加则永远安全。
+\end{enumerate}
+
+\subsection{拓展视野：二分写法的其他两种写法}
+\subsubsection{流派一：闭区间写法 }
+这是最传统、教科书上最常见的写法。
+\begin{itemize}
+    \item \textbf{区间定义：} $[l, r]$。即 $l$ 和 $r$ 都是\textbf{可能}作为答案的位置。
+    \item \textbf{初始化：} $l = 0, \ r = N-1$（覆盖整个数组）。
+    \item \textbf{循环条件：} \texttt{while (l <= r)}。
+    \item \textbf{收缩方式：} 因为 $mid$ 已经被检查过了，必须从区间里剔除，防止死循环。
+    \begin{itemize}
+        \item 向右收缩：$l = mid + 1$
+        \item 向左收缩：$r = mid - 1$
+    \end{itemize}
+    \item \textbf{终止状态：} 循环结束时 $l > r$（通常是 $l = r + 1$）。
+\end{itemize}
+
+\subsubsection{流派二：左闭右开写法}
+这是 C++ STL (\texttt{std::lower\_bound}) 和 Python 程序员喜欢的写法。
+\begin{itemize}
+    \item \textbf{区间定义：} $[l, r)$。即 $l$ 是可能的答案，但 $r$ 是\textbf{界外}的哨兵。
+    \item \textbf{初始化：} $l = 0, \ r = N$。
+    \item \textbf{循环条件：} \texttt{while (l < r)}。
+    \item \textbf{收缩方式：} 左右处理是不对称的。
+    \begin{itemize}
+        \item 向右收缩：$l = mid + 1$（$mid$ 被排除，左边界右移）。
+        \item 向左收缩：$r = mid$（因为 $r$ 本身就是开区间取不到的，所以把 $r$ 设为 $mid$ 等于排除了 $mid$）。
+    \end{itemize}
+    \item \textbf{终止状态：} $l == r$。
+\end{itemize}
+\newpage
+
+
+
+
+\section{进阶应用：二分答案——“猜”出来的最优解}
+
+二分答案是算法竞赛中二分思想最高频的考点，也是一种**思维方式的逆转**。
+
+\subsection{从“直接求解”到“试探验证”}
+
+很多时候，题目会要求我们求一个“最优值”（例如：求最少需要多少时间、求最大的最小距离等）。
+\begin{itemize}
+    \item \textbf{正向思维（求解）：} 直接计算出最优解 $X$。这往往非常困难，可能涉及复杂的动态规划或枚举，时间复杂度难以接受。
+    \item \textbf{逆向思维（验证）：} 我们不去直接算 $X$，而是先\textbf{猜}一个答案 $mid$，然后问自己：\textit{“如果答案是 $mid$，在这个限制下，我能满足题目的要求吗？”}
+\end{itemize}
+
+这种方法被称为\textbf{“答案的判定性转化”}。只要“验证一个答案是否可行”比“直接求出答案”要容易得多（例如验证通常只需要 $O(N)$ 的贪心），且答案具有\textbf{单调性}，我们就可以用二分来地毯式搜索最优解。
+
+\subsection{两类经典模型：最大化与最小化}
+
+二分答案题目通常有着非常鲜明的提问方式，对应着红蓝模型中不同的寻找方向：
+
+\subsubsection{1. 最小值最大化 (Maximize the Minimum)}
+\textbf{场景：} “求 $N$ 个点之间最近距离的最大值”、“求让最穷的人分到的钱尽可能多”。
+
+\textbf{单调性分析：}
+假设我们验证的数值为 $x$（例如距离）。
+\begin{itemize}
+    \item 如果 $x$ 满足条件（即距离为 $x$ 时能放得下），那么比 $x$ 更小的值（$x-1, x-2 \dots$）肯定更能放得下（条件更宽松）。
+    \item 我们的目标是找到\textbf{最后一个满足条件}的值。
+\end{itemize}
+
+\textbf{红蓝分布：}
+$$ \underbrace{\textcolor{blue}{\text{可行 (True)}}}_{\text{小数值}} \ \dots \ \textcolor{blue}{\text{可行}} \ \Big| \ \textcolor{red}{\text{不可行}} \ \dots \ \underbrace{\textcolor{red}{\text{不可行 (False)}}}_{\text{大数值}} $$
+\textbf{搜索目标：} 蓝色区域的右边界（$r$ 或 $l$，取决于具体写法，双开区间法中取 $l$）。
+
+\subsubsection{2. 最大值最小化 (Minimize the Maximum)}
+\textbf{场景：} “求耗时最长的任务所需的最少时间”、“求段和最大值的最小值”。
+
+\textbf{单调性分析：}
+假设我们验证的数值为 $x$（例如时间限制）。
+\begin{itemize}
+    \item 如果 $x$ 满足条件（即限时 $x$ 秒能做完），那么比 $x$ 更大的值（$x+1, x+2 \dots$）肯定更能做完（时间更充裕）。
+    \item 我们的目标是找到\textbf{第一个满足条件}的值。
+\end{itemize}
+
+\textbf{红蓝分布：}
+$$ \underbrace{\textcolor{red}{\text{不可行 (False)}}}_{\text{小数值}} \ \dots \ \textcolor{red}{\text{不可行}} \ \Big| \ \textcolor{blue}{\text{可行}} \ \dots \ \underbrace{\textcolor{blue}{\text{可行 (True)}}}_{\text{大数值}} $$
+\textbf{搜索目标：} 蓝色区域的左边界（$r$ 或 $l$，取决于具体写法，双开区间法中取 $r$）。
+
+\subsection{解题四步走}
+遇到这就两类问题，按以下步骤思考：
+\begin{enumerate}
+    \item \textbf{确定解空间}：答案的可能的最小值 $L$ 和最大值 $R$ 是多少？
+    \item \textbf{设计 Check 函数}：给你一个固定的值 $mid$，你能否在 $O($能过$)$ 时间内判断它是否合法？（通常配合贪心算法）。
+    \item \textbf{画出红蓝条}：判断单调性方向，大值可行还是小值可行？
+    \item \textbf{套用模板}：使用双开区间模板，根据 Check 的结果收缩边界。
+\end{enumerate}
+\newpage
+
+
+\section{数学进阶：实数域上的二分}
+
+当我们的战场从离散的整数点转移到连续的实数轴时（例如计算几何中的线段交点、物理学中的抛物线时间计算），二分的“红蓝边界”依然存在，但搜索策略需要进行重要的调整。
+
+\subsection{精度与效率的博弈}
+
+在实数域中，我们通常寻找的是一个近似解。传统教科书常教授 \texttt{while (r - l > eps)} 的写法，但在竞赛实战中，这往往是一个陷阱。
+
+\subsubsection{浮点数的陷阱：为什么 \texttt{eps} 不靠谱？}
+设定一个固定的精度阈值（如 `eps = 1e-7`）存在两个严重隐患：
+
+\begin{enumerate}
+    \item \textbf{\textcolor{red}{精度稀疏问题 (Precision Loss)}}：
+    计算机中的浮点数分布不是均匀的。随着数值绝对值的增大，可表示的浮点数之间的间隙（Gap）也会变大。
+    
+    \textit{例如：} 当答案高达 $10^{12}$ 时，相邻两个 `double` 类型的数值差可能已经超过了你设定的 `1e-7`。这意味着 $l$ 和 $r$ 即使紧挨着，差值也永远大于 `eps`，导致程序陷入\textbf{死循环}。
+    
+    \item \textbf{收敛速度的不确定性}：
+    在某些构造的极端数据下，区间收缩到 `eps` 附近所需的迭代次数可能超出预期，导致超时（TLE）。
+\end{enumerate}
+
+\subsection{黄金策略：固定迭代次数法}
+
+为了彻底规避精度死循环和超时问题，我强烈建议在实数二分中采用\textbf{“固定循环次数”}的策略。
+
+我们知道，每一次二分都会将区间长度减半。假设初始区间长度为 $L$，经过 $K$ 次迭代后，区间长度变为：
+$$ L_{final} = L \times \left(\frac{1}{2}\right)^K $$
+
+\textbf{为什么选 100 次？}
+若我们循环 $100$ 次，精度缩减倍率为 $2^{-100} \approx 10^{-30}$。
+\begin{itemize}
+    \item 哪怕初始区间是整个宇宙的大小（$10^{26}$ 米），100 次二分后误差也小于一个原子核。
+    \item 这个精度远远超过了 `double` 甚至 `long double` 的有效位数。
+\end{itemize}
+
+\begin{mdframed}[linecolor=blue!50, linewidth=2pt, roundcorner=5pt, backgroundcolor=blue!5]
+\textbf{【最佳实践指南】}
+
+在处理实数二分时，请遵循以下步骤：
+\begin{enumerate}
+    \item \textbf{摒弃 While}：不要写 `while (r - l > eps)`。
+    \item \textbf{使用 For 循环}：直接根据题目精度要求，写一个固定次数的循环。
+    \begin{itemize}
+        \item 一般精度要求：循环 \textbf{100 次}。
+        \item 极高精度要求（Long Double）：循环 \textbf{200 次}。
+    \end{itemize}
+    \item \textbf{无脑收缩}：在循环体内，直接令 $mid = (l+r)/2$。如果 $mid$ 满足条件，则 $l=mid$（或 $r=mid$），无需考虑 $+1/-1$ 的整数边界问题。
+\end{enumerate}
+这种写法时间复杂度恒定为 $O(100)$，在保证绝对精度的同时，彻底杜绝了死循环的风险。
+\end{mdframed}
+\newpage
+
+\section{进阶武器：三分查找与单峰极值}
+
+当函数的性质不再是简单的“单调”（一路升或一路降），而是变成了\textbf{“单峰”（Unimodal）}——即先增后减（像一座山峰）或先减后增（像一个山谷）时，二分法就失效了。
+
+此时，我们需要引入更高级的策略——\textbf{三分查找 (Ternary Search)}。
+
+\subsection{双探针逻辑：如何在黑暗中爬山？}
+
+假设我们要寻找函数 $f(x)$ 的\textbf{最大值}（山顶），且已知 $f(x)$ 是开口向下的单峰函数。
+
+二分法之所以行不通，是因为只看中间一个点，我们不知道自己是在“上坡”还是“下坡”（除非求导，但离散函数无法求导）。因此，我们需要\textbf{两个探针}来测定地势的走向。
+
+我们在区间 $(l, r)$ 内部设立两个采样点 $m_1$ 和 $m_2$，将区间大致三等分：
+$$ m_1 = l + \frac{r - l}{3}, \quad m_2 = r - \frac{r - l}{3} $$
+显然有位置关系：$l < m_1 < m_2 < r$。
+
+
+
+通过比较这两个探针的高度 $f(m_1)$ 和 $f(m_2)$，我们可以安全地\textbf{“砍掉”}一段绝对不可能包含山顶的区间：
+
+\begin{itemize}
+    \item \textbf{情形一：} $f(m_1) < f(m_2)$ \\
+    \textbf{地势分析：} 右边的 $m_2$ 比左边的 $m_1$ 高。
+    \textbf{推论：} 既然我们要找最高点，且山只有一个顶，那么最高点绝不可能在 $m_1$ 的左侧（否则 $m_1$ 处于下坡阶段，但这违背了$m_2$更高的事实，或意味着有两个峰）。
+    \item[] $\Rightarrow$ \textbf{操作：} 极值一定在 $(m_1, r)$ 中。安全\textbf{\textcolor{red}{舍弃左侧区间}}，令 $l = m_1$。
+
+    \item \textbf{情形二：} $f(m_1) > f(m_2)$ \\
+    \textbf{地势分析：} 左边的 $m_1$ 比右边的 $m_2$ 高。
+    \textbf{推论：} 同理，最高点绝不可能在 $m_2$ 的右侧（否则 $m_2$ 之后还在升高，那 $m_1$ 到 $m_2$ 就成了下坡，形成凹陷，违背单峰性质）。
+    \item[] $\Rightarrow$ \textbf{操作：} 极值一定在 $(l, m_2)$ 中。安全\textbf{\textcolor{blue}{舍弃右侧区间}}，令 $r = m_2$。
+\end{itemize}
+
+\subsection{实现：离散域的“暴力收尾”}
+
+在实数域上三分很简单（使用固定循环次数即可），但在\textbf{整数域}上三分极其容易写挂。
+
+当 $l$ 和 $r$ 距离很近时（例如 $r - l < 3$），$m_1$ 和 $m_2$ 可能会计算重合，或者陷入死循环。为了在考场上万无一失，建议采用\textbf{“三分缩范围 + 暴力定答案”}的混合策略：
+
+\begin{enumerate}
+    \item \textbf{主循环收缩：} 当区间长度比较大时（例如 $l + 2 < r$），正常执行三分逻辑，不断缩小范围。
+    \item \textbf{暴力扫尾：} 当循环结束时，区间内只剩下 3 到 5 个整数点。此时不要再纠结边界了，直接一个 \texttt{for} 循环遍历 $[l, r]$ 这一小段，算出最大值即可。
+\end{enumerate}
+
+这种写法既保留了 $O(\log N)$ 的高效，又完全规避了小区间内的数学边界陷阱。
+\newpage
+
+\section{0/1 分数规划：化除为减的魔法}
+
+这是二分思想在代数领域最惊艳的应用之一。它解决了一类让人头疼的“最优比率”问题。
+
+\subsection{问题的本质}
+假设你有一堆物品，每个物品有两个属性：价值 $a_i$ 和 代价 $b_i$。我们需要从中选出一组物品（集合 $S$），在满足题目特定约束（比如选 $k$ 个，或者连通）的前提下，让总价值与总代价的比值最大：
+\begin{equation}
+\text{Maximize } \quad V = \frac{\sum_{i \in S} a_i}{\sum_{i \in S} b_i}
+\end{equation}
+
+直接求这个比率非常困难，因为分子和分母都会随着选择变化，且互相牵制。
+
+\subsection{核心推导：不等式的变形}
+我们换个思路：与其直接求最大值，不如去**猜**这个比率是多少。
+
+假设我们猜测最终答案能达到 $mid$。
+如果存在一种选择方案 $S$，使得比率 $\ge mid$，那么数学上意味着：
+$$ \frac{\sum a_i}{\sum b_i} \ge mid $$
+我们将分母乘过去（注意 $b_i$ 通常为正，不改变符号）：
+$$ \sum a_i \ge mid \cdot \sum b_i $$
+移项，将含 $mid$ 的项挪到左边：
+$$ \sum a_i - \sum (mid \cdot b_i) \ge 0 $$
+合并求和符号：
+\begin{equation}
+\sum_{i \in S} (a_i - mid \cdot b_i) \ge 0
+\end{equation}
+
+\subsection{算法流程：新权值的诞生}
+通过上面的变形，我们发现了一个惊人的事实：
+\begin{quote}
+    \textbf{如果我们把每个物品的新权值定义为 $w_i = a_i - mid \cdot b_i$，那么问题就变成了：能否选出一组物品，使得它们的新权值之和非负？}
+\end{quote}
+
+这彻底消除了讨厌的除法！现在的解题套路变成了标准的三步走：
+
+\begin{enumerate}
+    \item \textbf{二分答案}：在实数域上二分比率 $mid$（建议迭代 100 次）。
+    \item \textbf{重置权值}：在 `check(mid)` 函数中，将所有物品的权值重置为 $w_i = a_i - mid \cdot b_i$。
+    \item \textbf{判定可行性}：
+    \begin{itemize}
+        \item 如果题目要求选 $K$ 个：那就贪心地选 $w_i$ 最大的 $K$ 个，看和是否 $\ge 0$。
+        \item 如果题目要求生成树：那就用 $w_i$ 跑最大生成树，看树权是否 $\ge 0$。
+        \item 如果题目要求找环：那就看图中是否存在正环。
+    \end{itemize}
+    如果最大权值和 $\ge 0$，说明 $mid$ 定小了（或者刚好），答案在右边；否则答案在左边。
+\end{enumerate}
+
+\subsection{总结}
+0/1 分数规划的本质，就是通过二分答案，将非线性的\textbf{“比率最大化”}问题，转化为线性的\textbf{“判定权值和非负”}问题。掌握了这个转化，你就能把以前学过的所有算法（贪心、DP、最短路）都套上“最优比率”的外壳。
+\newpage
+
+\section{另辟蹊径：倍增逼近法 (Binary Lifting)}
+
+传统的二分查找是“折半切分”，即通过不断砍掉一半的搜索空间来逼近答案。
+但在某些场景下（例如不知道右边界 $R$ 在哪里，或者是在树上进行跳跃），我们还有一种更具构造性的思维方式——\textbf{倍增逼近}。
+
+\subsection{思维转换：从“切分”到“拼凑”}
+
+想象你面前有一个巨大的天平，左盘放着你要找的神秘答案 $X$（一个整数）。你手里有一套特殊的砝码，重量分别是 $2^0, 2^1, 2^2, \dots, 2^{30}$。
+
+任何一个整数都可以由二进制唯一表示。因此，我们不需要去猜 $X$ 在哪个区间，而是尝试**用手里的二进制砝码去“拼”出这个 $X$**。
+
+这一过程遵循\textbf{“贪心”}原则：
+\begin{enumerate}
+    \item 先试探最大的砝码（比如 $2^{30}$）。如果放上去没超重（满足条件），就保留它；如果超重了，就扔掉。
+    \item 接着试探次大的砝码（$2^{29}$）。
+    \item 一直试到最小的砝码（$2^0$）。
+\end{enumerate}
+最后留在天平上的砝码总重，就是我们要找的答案。
+
+\subsection{操作流程：倒序跳跃}
+
+在数轴上，这表现为一种\textbf{“试探性跳跃”}的策略。假设我们要寻找\textbf{最后一个满足条件}的位置（即红蓝边界的 $l$）。
+
+\begin{enumerate}
+    \item \textbf{初始化：} 我们站在起点 $pos = L$（假设 $L$ 满足条件）。
+    \item \textbf{大步流星：} 我们设定一个步长指数 $k$（比如从 30 开始递减到 0）。
+    \item \textbf{试探：} 我们问自己：\textit{“如果我从当前位置 $pos$ 往右跳 $2^k$ 步，会越界吗？那个位置还满足条件吗？”}
+    \begin{itemize}
+        \item \textbf{若满足（Check 成功）：} 说明这一大步是安全的。我们就真的跳过去：$pos \leftarrow pos + 2^k$。
+        \item \textbf{若不满足（Check 失败）：} 说明这一步跳太远了，跳到了红色区域。我们就不跳，保持原地不动，尝试下一个更小的步长 $2^{k-1}$。
+    \end{itemize}
+    \item \textbf{结束：} 当 $k$ 减到 0 并处理完后，$pos$ 就停留在满足条件的对岸最远处。
+\end{enumerate}
+
+\subsection{倍增 vs 普通二分：优劣对比}
+
+为什么我们要学这种看起来更麻烦的写法？
+
+\begin{itemize}
+    \item \textbf{优势 1：无需确定的右边界 (No Upper Bound)} \\
+    普通二分必须先定好 $R$。如果答案可能非常大，或者 $R$ 很难确定，倍增法可以从起点出发，指数级扩张寻找，或者直接假定一个极大步长开始试探。
+    
+    \item \textbf{优势 2：状态合成 (State Composition)} \\
+    这是倍增最核心的用途。在数据结构（如 ST 表、LCA）中，我们无法简单地计算“中点”。
+    \textit{例如：} 在树上找祖先，你没法直接算“当前节点和根节点的中点”。但你可以很容易地算出“向上跳 $2^k$ 步”的位置。倍增法利用 $f(i, k) = f(f(i, k-1), k-1)$ 的结合律，使得逼近成为可能。
+\end{itemize}
+
+\begin{mdframed}[linecolor=green!40!black, linewidth=1pt, roundcorner=5pt, backgroundcolor=green!5]
+\textbf{【核心公式】}
+$$ \text{Answer} = \text{Base} + \sum_{k=30}^{0} \left( \text{check}(\text{Base} + 2^k) \ ? \ 2^k : 0 \right) $$
+倍增的本质，就是将答案 $X$ 进行二进制拆分，从高位到低位逐位确定的过程。
+\end{mdframed}
+\newpage
+
+
+
+\section{树上二分：在分支结构中定位}
+
+当我们把线性的数组折叠成一棵树，二分的思想依然适用，但“怎么跳”成了最大的难题。在树上，我们没有下标，无法直接计算 $mid = (l+r)/2$。此时，\textbf{倍增法}成为了树上二分的灵魂伴侣。
+
+\subsection{路径即数组：单调性的延续}
+
+\subsubsection{树上的“线性空间”}
+虽然树是分叉的，但对于树上的任意两个节点 $u$ 和 $v$，它们之间的\textbf{简单路径}是唯一的。
+如果我们把这条路径拉直，它就是一个数组。
+
+\begin{quote}
+    \textbf{典型场景：} 只有根节点到叶子节点的路径上满足某种单调性（例如节点的深度、路径上前缀和的大小）。
+\end{quote}
+
+假设我们要找节点 $u$ 的某个祖先，使得该祖先满足特定条件（例如深度最小的满足性质的节点）。
+这条从 $u$ 指向 $Root$ 的路径，就是一个天然的单调序列。
+
+\subsection{核心操作：树上倍增 (Tree Binary Lifting)}
+
+在数组上，我们可以随机访问 $A[mid]$。在树上，我们只能顺藤摸瓜。为了模拟二分，我们预处理出**倍增数组**（通常记为 $Jump(u, k)$，表示从 $u$ 向上跳 $2^k$ 步到达的祖先）。
+
+这本质上是上一节“倍增逼近”在树上的投影：
+
+\begin{enumerate}
+    \item \textbf{初始化：} 当前节点 $curr = u$。
+    \item \textbf{倒序试探：} 从最大的步长 $k = \log N$ 开始尝试，直到 $0$。
+    \item \textbf{判定逻辑：}
+    \begin{itemize}
+        \item 设目标位置为 $next = Jump(curr, k)$。
+        \item 如果 $next$ 依然在“不满足条件”的区域（红色区域），说明跳得还不够高（或者跳得不够远）。
+        \item \textbf{执行跳跃：} $curr = next$（保留这一步，继续往上找）。
+    \end{itemize}
+    \item \textbf{锁定目标：} 循环结束后，$curr$ 通常停留在\textbf{最后一个不满足条件}的位置。其父节点 $Jump(curr, 0)$ 即为我们寻找的分界点。
+\end{enumerate}
+
+\subsection{经典应用：LCA 的二分本质}
+
+最近公共祖先（LCA）的求解过程，实际上就是\textbf{两次树上二分}的组合。
+
+想象 $u$ 和 $v$ 是两个登山者，他们要在山脊汇合。
+\begin{enumerate}
+    \item \textbf{阶段一：对齐高度（二分深度）}
+    如果 $u$ 比 $v$ 低，$u$ 需要向上跳。通过倍增试探，让 $u$ 跳到和 $v$ 同一深度。
+    
+    \item \textbf{阶段二：共同攀登（二分分叉点）}
+    现在 $u$ 和 $v$ 同高。如果 $u=v$，汇合成功。
+    如果 $u \neq v$，说明汇合点还在更上方。
+    我们尝试让 $u$ 和 $v$ 同时向上跳 $2^k$ 步：
+    \begin{itemize}
+        \item \textbf{若 $Jump(u, k) == Jump(v, k)$：} 说明跳到了公共祖先区域（蓝色区域）。这可能是汇合点，也可能比汇合点更高。我们要找的是“最低”的，所以\textbf{不能跳}（类似于二分中 $mid$ 满足条件时，我们要收缩右边界，这里我们保留原地不动以逼近下界）。
+        \item \textbf{若 $Jump(u, k) \neq Jump(v, k)$：} 说明还在分叉的区域（红色区域），还没汇合。于是\textbf{坚决跳上去}，缩小距离。
+    \end{itemize}
+\end{enumerate}
+最终，$u$ 和 $v$ 会停在汇合点（LCA）的\textbf{正下方}。
+
+\subsection{另一种视角：DFS 序与拍扁}
+
+除了在树上直接跳跃，还有一种降维打击的方法：\textbf{DFS 序 (DFS Order)}。
+
+通过 DFS 遍历，我们可以记录每个子树进入的时间戳 $in[u]$ 和离开的时间戳 $out[u]$。
+\begin{itemize}
+    \item \textbf{性质：} 节点 $u$ 的所有子孙节点，其时间戳一定落在区间 $[in[u], out[u]]$ 内。
+\end{itemize}
+
+这使得我们可以将“子树查询”转化为“区间查询”。如果题目要求在子树中寻找满足条件的节点，我们可以结合\textbf{线段树}或\textbf{二分下标}，将树上问题完全转化为数组上的二分问题。
+
+\begin{mdframed}[linecolor=purple!50, backgroundcolor=purple!5]
+\textbf{【总结】}
+树上二分没有新算法，只有新载体。
+\begin{itemize}
+    \item 想要找“路径”上的点？ $\rightarrow$ 用\textbf{倍增数组}代替下标索引。
+    \item 想要找“子树”内的点？ $\rightarrow$ 用\textbf{DFS 序}拍扁成区间。
+\end{itemize}
+\end{mdframed}
+\newpage
+
+
+
+\section{斜率优化：凸包上的二分舞步}
+
+当我们在做动态规划（DP）时，如果转移方程长得像 $dp[i] = \min \{ dp[j] + A[i] \times B[j] + \dots \}$，其中包含一个 $i$ 和 $j$ 的乘积项，这通常暗示我们需要使用**斜率优化**（也称 Convex Hull Trick）。
+
+\subsection{几何视角：直线的竞速}
+
+\subsubsection{把决策看作直线}
+不要把转移方程看作代数式，试着把它看作解析几何。
+对于每一个可能的决策点 $j$，它其实都定义了一条一次函数直线：
+$ y = k_j \cdot x + b_j $
+其中：
+\begin{itemize}
+    \item $k_j$（斜率）和 $b_j$（截距）只和 $j$ 有关。
+    \item 自变量 $x$ 只和当前状态 $i$ 有关。
+\end{itemize}
+
+我们的任务变成了：\textbf{对于给定的 $x$（即当前的 $i$），在这一堆直线中，哪一条直线的 $y$ 值最小（或最大）？}
+
+
+
+\subsubsection{下凸壳（Lower Envelope）}
+如果我们把所有直线画出来，你会发现，真正有资格成为“最小值”的直线，构成了图形的最下沿。这个下沿呈现出一个**下凸（Convex）**的形状。
+在此凸壳上的直线，其斜率是单调递增（或递减）的。
+
+\subsection{为什么需要二分？}
+
+通常情况下，如果查询的 $x$ 是单调递增的，我们可以用双端队列（Deque）像滑窗一样维护凸壳。
+\textbf{但是，如果查询的 $x$ 是乱序的（忽大忽小），我们该怎么办？}
+
+这时候，队列头部的“过期操作”失效了。我们面对的是一个静态的（或动态插入的）凸壳，我们需要在 $O(\log N)$ 的时间内找到最适合当前 $x$ 的那条直线。
+
+\subsection{二分策略：寻找“交点”分界线}
+
+凸壳上的直线虽然多，但它们各司其职。每一条直线 $Line_k$ 都有它称霸的一段区间。
+直线 $Line_k$ 和 直线 $Line_{k+1}$ 会有一个交点 $Intersect(k, k+1)$。
+\begin{itemize}
+    \item 在交点的左侧，$Line_k$ 更优。
+    \item 在交点的右侧，$Line_{k+1}$ 更优。
+\end{itemize}
+
+由于凸壳上的直线斜率单调，这些**交点的横坐标**也是严格单调的！这正是二分的温床。
+
+\subsubsection{红蓝判定逻辑}
+假设凸壳里存了 $M$ 条直线，按斜率排序为 $L_1, L_2, \dots, L_M$。
+我们要为当前的查询 $x_q$ 寻找最佳直线。
+
+我们定义二分区间 $(l, r)$ 为直线的下标索引。
+\textbf{Check 逻辑：} 比较 $mid$ 号直线和 $mid+1$ 号直线。
+\begin{itemize}
+    \item 计算交点 $X_{cross} = \text{Intersection}(L_{mid}, L_{mid+1})$。
+    \item \textbf{情形一（$x_q < X_{cross}$）：}
+    当前的查询点在交点的左侧。说明对于 $x_q$ 来说，斜率较小的 $L_{mid}$ 比 $L_{mid+1}$ 更好（更优）。
+    且由于凸性，$L_{mid+1}$ 右边的直线会更差。
+    $\Rightarrow$ \textbf{答案在左侧}（含 $mid$），$r = mid$。
+    
+    \item \textbf{情形二（$x_q \ge X_{cross}$）：}
+    当前的查询点在交点的右侧。说明 $L_{mid}$ 已经被 $L_{mid+1}$ 淘汰了。
+    $\Rightarrow$ \textbf{答案在右侧}，$l = mid$。
+\end{itemize}
+
+\subsection{李超线段树：二分的另一种形态}
+
+如果连插入直线的斜率都不是单调的，连凸壳都维护不了怎么办？
+这时我们会用到**李超线段树**。它的本质其实是\textbf{“在线段树上的二分”}。
+
+李超树的每个节点存储一条“优势直线”。当我们查询 $x$ 时，从根节点走到叶子节点，其实就是在进行一次特殊的二分查找：
+\begin{itemize}
+    \item 我们拿手里的直线和当前节点的优势直线比较。
+    \item 根据 $mid$ 位置的优劣，决定是去左儿子还是右儿子继续“比武”。
+\end{itemize}
+这依然没有逃脱 $O(\log N)$ 的二分宿命。
+
+\begin{mdframed}[linecolor=teal, backgroundcolor=teal!5]
+\textbf{【总结】}
+斜率优化的二分，本质上是在**单调的斜率序列**或**单调的交点序列**上查找。
+\begin{itemize}
+    \item 如果你要求 $f(x)$ 最小，你就在找斜率最接近 $x$ 导数的那条切线。
+    \item 判断标准：当前直线和下一条直线的交点，是否已经越过了我的 $x$？
+\end{itemize}
+\end{mdframed}
+\newpage
+
+
+
+\section{高阶模型：维度变换与 WQS 二分}
+
+当题目要求“恰好选 $K$ 个物品”时，朴素的 DP 往往需要一维状态来记录个数，导致复杂度飙升到 $O(N^2)$。
+
+\textbf{WQS 二分（又称 Aliens Trick / 带权二分）}提供了一种降维打击的思路：通过引入一个“隐形的手”，把刚性的数量限制转化为弹性的价格调节。
+
+\subsection{直观理解：用“价格”控制“销量”}
+
+\subsubsection{硬约束 vs. 软调节}
+假设你在经营一家商店，题目要求你\textbf{“必须卖出恰好 $K$ 个苹果”}以获得最大利润。这很难，因为你得时刻盯着销量。
+
+但如果你换一种思路：
+\begin{enumerate}
+    \item 取消“恰好 $K$ 个”的限制，允许随便卖（这就变成了简单的贪心或 $O(N)$ DP）。
+    \item 但是，每卖出一个苹果，必须向系统缴纳 \textbf{$\lambda$ 元的“手续费”}。
+\end{enumerate}
+
+这就引入了博弈：
+\begin{itemize}
+    \item 如果手续费 $\lambda$ \textbf{太贵}（例如 100 万/个），为了利润最大化，你可能一个都不卖（选出的个数 $< K$）。
+    \item 如果手续费 $\lambda$ \textbf{太便宜}（甚至倒贴钱），你会疯狂卖苹果（选出的个数 $> K$）。
+    \item \textbf{中间必然存在一个神奇的价格 $\lambda_{mid}$}，使得你在追求利润最大化的无拘无束的决策中，\textbf{“自愿”}且\textbf{“恰好”}卖出了 $K$ 个苹果！
+\end{itemize}
+
+这就是 WQS 二分的本质：\textbf{二分这个手续费 $\lambda$，直到最优策略自动选出 $K$ 个物品。}
+
+\subsection{适用前提：边际效应递减（凸性）}
+
+不是所有问题都能用这招。WQS 二分生效的前提是问题的解具有\textbf{凸性（Convexity）}。
+
+通俗地说，就是\textbf{“边际效应递减”}：
+\begin{quote}
+    当你选第 1 个物品时，获利巨大；选第 2 个时，获利稍少……选第 100 个时，获利微乎其微。
+\end{quote}
+如果我们画出图表：横坐标是“选择物品的个数 $x$”，纵坐标是“最大收益 $f(x)$”。
+如果 $f(x)$ 的图像是一个\textbf{上凸的形状}（斜率逐渐变小），那么我们就可以用 WQS 二分。
+
+
+\subsection{几何意义：斜率切线法}
+
+\subsubsection{为什么要减去 $\lambda \cdot x$？}
+我们在无限制的情况下求解的最大利润，实际上是在求：
+$$ g(\lambda) = \max_{x} \{ f(x) - \lambda \cdot x \} $$
+移项变形一下：
+$$ f(x) = \lambda \cdot x + g(\lambda) $$
+这看起来像什么？$y = kx + b$！
+\begin{itemize}
+    \item $f(x)$ 是 $y$ 坐标（总收益）。
+    \item $x$ 是 $x$ 坐标（选择个数）。
+    \item $\lambda$ 是\textbf{斜率}。
+    \item $g(\lambda)$ 是\textbf{截距}。
+\end{itemize}
+
+当我们固定斜率 $\lambda$ 并试图最大化截距 $g(\lambda)$ 时，几何上等价于：\textbf{用一条斜率为 $\lambda$ 的直线去切 $f(x)$ 的图像。} 切点对应的横坐标，就是在该手续费下的最优选择个数。
+
+\subsection{解题三步走}
+
+\begin{enumerate}
+    \item \textbf{二分斜率 $\lambda$}：
+    范围通常在 $[- \text{inf}, \text{inf}]$。
+    
+    \item \textbf{带权 DP / 贪心 (Check 函数)}：
+    在 `check(mid)` 中，忽略个数 $K$ 的限制，但把每个物品的权值减去 $mid$（手续费）。
+    跑一遍基础算法，算出此时的\textbf{最优总价值} $val$ 和\textbf{最优选取的物品数} $cnt$。
+    \item \textbf{调整边界与还原答案}：
+    \begin{itemize}
+        \item 如果 $cnt \ge K$：说明手续费太便宜了，或者刚好。我们记录答案，并尝试增加手续费（让 $\lambda$ 变大，$cnt$ 变小），即 $l = mid + 1$（或根据写法调整）。
+        \item 如果 $cnt < K$：说明手续费太贵了，需要降价。
+    \end{itemize}
+    \textbf{最终答案还原公式：}
+    $$ \text{真实答案} = \text{带权最优值} + K \cdot \text{最终的手续费} $$
+    即：$f(K) = g(\lambda_{ans}) + K \cdot \lambda_{ans}$。
+\end{enumerate}
+\newpage
+
+
+
+\section{整体二分（Parallel Binary Search）：批发式的高效分治}
+
+这是二分算法的最终形态。它解决的是这样一种困境：
+\begin{quote}
+    你有 $10$ 万个询问，每个询问都可以用二分答案解决。但是，每次 `check` 函数都要跑一遍 $O(N)$ 的操作。如果一个个做（零售），总复杂度是 $O(Q \cdot N \cdot \log V)$，直接超时。
+\end{quote}
+
+整体二分的核心思想是**“批发”**：既然所有询问都在同一个答案值域 $[Min, Max]$ 内找答案，不如把它们捆在一起，通过一次遍历，同时更新所有人的进度。
+
+\subsection{核心逻辑：数据流的分拣}
+
+我们要定义一个递归过程 \texttt{solve(L, R, QueryList)}，含义是：\textit{“我知道这堆询问 QueryList 的最终答案，一定都在数值区间 $[L, R]$ 里，请帮我进一步缩小范围。”}
+
+这个过程就像在一个巨大的\textbf{分拣工厂}里工作：
+
+\begin{enumerate}
+    \item \textbf{设定中点（切割）：}
+    取值域中点 $mid = (L + R) / 2$。我们将把所有操作和询问按照“是否 $\le mid$”这一标准分为两类。
+
+    \item \textbf{发放物资（贡献计算）：}
+    遍历时间轴上所有的修改操作（例如“加入一个数 $x$”）：
+    \begin{itemize}
+        \item 如果 $x \le mid$：说明这个数属于“左半边”的较小值。它会对当前的判定产生影响（比如贡献了 $1$ 个排名）。我们将它加入数据结构（如树状数组）。
+        \item 如果 $x > mid$：说明这个数太大了，暂时不考虑，之后会归入右半边递归。
+    \end{itemize}
+
+    \item \textbf{客户分流（询问判定）：}
+    遍历 \texttt{QueryList} 中的每一个询问（例如“查区间第 $K$ 小”）：
+    查询数据结构，看在只考虑 $\le mid$ 的数值时，当前区间里有多少个数（记为 $cnt$）。
+    \begin{itemize}
+        \item \textbf{\textcolor{blue}{左侧分流 (Happy List)}}：
+        若 $cnt \ge K$：说明答案 $\le mid$（光靠左半边的数就够凑齐 $K$ 个了）。
+        $\Rightarrow$ 该询问归入 \texttt{left\_list}，继续在 $[L, mid]$ 里找。
+        
+        \item \textbf{\textcolor{red}{右侧分流 (Hungry List)}}：
+        若 $cnt < K$：说明答案 $> mid$（左半边的数不够，还需要在右半边再找 $K - cnt$ 个）。
+        $\Rightarrow$ \textbf{关键操作：} 令 $K \leftarrow K - cnt$（扣除已有的贡献），然后该询问归入 \texttt{right\_list}，继续在 $[mid+1, R]$ 里找。
+    \end{itemize}
+
+    \item \textbf{还原现场（Rollback）：}
+    \textbf{这是极其重要的一步！} 在进入下一层递归之前，必须把步骤 2 中加入数据结构的操作全部撤销（清空树状数组）。因为下一层递归是独立的，不能受当前层的残余影响。
+
+    \item \textbf{递归分治：}
+    分别调用 \texttt{solve(L, mid, left\_list)} 和 \texttt{solve(mid+1, R, right\_list)}。
+\end{enumerate}
+
+\subsection{复杂度分析：为什么它快？}
+虽然看起来很复杂，但我们算一算账：
+\begin{itemize}
+    \item \textbf{深度：} 答案的值域为 $V$，递归层数只有 $\log V$ 层。
+    \item \textbf{广度：} 在每一层递归中，每个修改操作和每个询问只会被处理一次（要么去左边，要么去右边，类似归并排序）。
+\end{itemize}
+配合 $O(\log N)$ 的数据结构，总的时间复杂度为 $O((N + Q) \log N \log V)$。这比单独二分快了整整 $N$ 倍！
+
+\begin{mdframed}[linecolor=orange, backgroundcolor=orange!5]
+\textbf{【总结：整体二分的三个特征】}
+\begin{enumerate}
+    \item \textbf{答案可二分}：单个询问具有单调性。
+    \item \textbf{修改独立}：操作之间互不影响，可以按值域划分。
+    \item \textbf{贡献可加}：判定时可以把一部分贡献先扣除（如 $K \leftarrow K - cnt$），去子问题里找剩下的。
+\end{enumerate}
+\end{mdframed}
+
+\newpage
+
+
+
+\section{二分核心知识点全景汇总}
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3} %稍微增加行高以适应数学公式
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{层次} & \textbf{知识点} & \textbf{核心逻辑} & \textbf{典型应用} \\ \midrule
+基础 & 整数二分 & 双开边界 $l+1 < r$ & 有序数组定位 \\
+基础 & 实数二分 & 固定迭代 100 次 & 几何/计算几何 \\
+核心 & 二分答案 & 判定性转化 (Check函数) & 资源分配/最大最小化 \\
+进阶 & 倍增逼近 & 二进制拆分/拼凑 & LCA / ST表 / 快速幂 \\
+进阶 & 三分查找 & 三等分点采样对比 & 单峰函数求极值 \\
+进阶 & 分数规划 & 权值重定义为 $a-kb$ & 效益比 (0/1分数) 最优化 \\
+进阶 & 树上二分 & 利用线段树结构下降 & $O(\log N)$ 查第 K 小/前缀和 \\
+高阶 & 斜率优化二分 & 凸包/单调队列上的查找 & DP 决策单调性优化 \\
+高阶 & WQS 二分 & 凸优化与代价抵消 & 带选课/分段约束的最优解 \\
+高阶 & 整体二分 & 全局询问分治 & 动态区间第 K 大 \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\section{结语：二分的灵魂是“舍弃”}
+二分查找之所以高效，是因为它每一步都在果断地舍弃一半的解空间。在学习过程中，大家应重点体会这种“分而治之”的确定性。希望本讲义能帮助大家彻底掌握二分算法，在竞赛中做到边界不乱、逻辑清爽。
+
+\end{document}

@@ -31,7 +31,7 @@
     git add .
 
     # 2. 提交到本地仓库 (请将引号内的文字替换为本次修改的简述)
-    git commit -m "update: 12d第一周"
+    git commit -m "update: 删除无用部分"
 
 ### 第三步：推送到 GitHub
 将本地的提交同步到远程服务器：
