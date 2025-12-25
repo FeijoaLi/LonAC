@@ -86,10 +86,10 @@
 \item \textbf{预处理：构造前缀和数组 ($O(N)$)}  \\ 
 我们定义一个数组 $S$，其中 $S[i]$ 表示前 $i$ 天背诵的单词总数。
 \[ S[i] = a[1] + a[2] + \dots + a[i] \]
-在代码中，我们不需要每次都重新从头加，而是利用递推公式：
-\[ S[i] = S[i-1] + a[i] \quad (\text{其中 } S[0] = 0) \]
-这意味着：\textbf{当前的前缀和 = 前一天的前缀和 + 今天的单词数}。
+在代码中，我们不需要每次都重新从头加，
 
+而是利用：\textbf{ 前 $i$ 天的总和 = 前 $i - 1$ 天的总和 + 今天的单词数}。
+\[ S[i] = S[i-1] + a[i] \quad (\text{其中 } S[0] = 0) \]
 \Needspace{10\baselineskip}
 \begin{lstlisting}[language=C++]
     for (int i = 1; i <= n; i++) {

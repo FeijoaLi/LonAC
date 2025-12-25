@@ -89,7 +89,7 @@ T.#..
 \begin{lstlisting}[language=C++]
 const int MAXN = 1005;
 char mp[MAXN][MAXN];
-int dist[MAXN][MAXN]; `// 记录步数，兼具 visited 功能`
+int dist[MAXN][MAXN];
 int n, m;
 
 `// 方向数组：上、下、左、右`
@@ -156,7 +156,8 @@ queue<Node> q;
                 if (mp[nnx][nny] == '#') continue;
 
                 if (dist[nnx][nny] == -1) {
-                    dist[nnx][nny] = dist[x][y] + 1; `// 弹跳也只花 1 时间`
+                    dist[nnx][nny] = dist[x][y] + 1; 
+                    `// 弹跳也只花 1 时间`
                     q.push({nnx, nny});
                 }
             }

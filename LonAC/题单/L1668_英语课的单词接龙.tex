@@ -78,7 +78,7 @@ Valid
 \begin{itemize}
     \item 获取前一个单词的尾字母：
     可以使用 \texttt{s[i-1].back()} 或者 
-    \texttt{s[i-1][s[i-1].length()-1]}。
+    \texttt{s[i-1][s[i-1].size()-1]}。
     \item \textbf{忽略大小写}：
     这是本题的易错点。'A' 和 'a' 在 ASCII 码中是不相等的。
     比较时需要统一转换为大写或小写。
@@ -105,7 +105,10 @@ Valid
     \end{lstlisting}
 
     \item \textbf{方法二：利用 ASCII 码手动转换（底层原理）}  \\
-    在 ASCII 码表中，大写字母 \texttt{'A'} (65) 与小写字母 \texttt{'a'} (97) 之间相差 \textbf{32}。因此，判断一个字符如果在大写范围内（'A' $\sim$ 'Z'），只要加上 32 即可变为对应的小写字母。
+    在 ASCII 码表中，大写字母 \texttt{ $A$ } (65) 
+    与小写字母 \texttt{ $a$ } (97) 之间相差 \textbf{32}。
+    因此，判断一个字符如果在大写范围内（$A$ $\sim$ $Z$），
+    只要加上 32 即可变为对应的小写字母。
     
     \Needspace{8\baselineskip}
     \begin{lstlisting}[language=C++]
@@ -124,7 +127,7 @@ Valid
 \end{itemize}
 
 \item \textbf{完整流程} \\ 
-如果循环结束后都没有触发 \texttt{return 0}，说明所有单词都符合规则，最后输出 \texttt{Valid}。
+如果循环结束后都没有触发 \texttt{return $0$}，说明所有单词都符合规则，最后输出 \texttt{Valid}。
 
 \end{enumerate}
 

@@ -132,6 +132,8 @@ bool cmp(const Student &x, const Student &y) {
 }
 \end{lstlisting}
 
+\newpage
+
 \item \textbf{主函数实现} \\
 读入数据时注意手动赋值 $`id`$，然后调用 $sort$ 排序，最后输出 $`id`$ 即可。
 
@@ -160,19 +162,13 @@ bool cmp(const Student &x, const Student &y) {
 struct Student {
     int id, gender, height;
     bool operator < (const Student &other) const {
-        if (gender != other.gender) return gender > other.gender;
-        if (height != other.height) {
-            return gender == 1 ? height > other.height : height < other.height;
-        }
-        return id < other.id;
+        \\ `完善此处代码,实现相同功能`
     }
 };
 \end{lstlisting}
 
 
 \subsubsection*{2. 变式思考：关于“稳定性” (Stability)}
-
-
 
 \textbf{问题}：如果题目删去规则$4$（\textit{“如果性别相同且身高也相同，则按照学号从小到大的顺序排列”}），改为\textbf{“保留输入时的相对顺序”}，代码需要修改吗？
 
